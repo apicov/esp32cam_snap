@@ -29,6 +29,6 @@ project are:
 ### Start saving images in a remote server
 
 After starting to taking pictures and storing them in the SD card, the process
-"Eject SD" `->` "Unload data" `->` "Reinsert SD" loop became cumbersome, this
+`"Eject SD" -> "Unload data" -> "Reinsert SD"` loop became cumbersome, this
 raised the need to thinking to store the data in a different way, potentially in
 a remote server via HTTP or some other mean.
