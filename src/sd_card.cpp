@@ -9,10 +9,5 @@ esp_err_t initi_sd_card(void)
     mount_config.allocation_unit_size = 16 * 1024;
     
     sdmmc_card_t *card;
-    esp_err_t err = esp_vfs_fat_sdmmc_mount("/sdcard", &host, &slot_config, &mount_config, &card);
-    if (err != ESP_OK)
-    {
-        return err;
-    }
-    return ESP_OK;
+    return esp_vfs_fat_sdmmc_mount("/sdcard", &host, &slot_config, &mount_config, &card);
 }
