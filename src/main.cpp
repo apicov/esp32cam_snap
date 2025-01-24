@@ -182,8 +182,9 @@ extern "C" void app_main()
 
     esp_bt_gap_set_device_name(DEVICE_NAME);
     esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
-    
-    ret = initi_sd_card();
+
+    sdmmc_card_t *card;
+    ret = initi_sd_card("/sdcard", &card);
     if (ret != ESP_OK) {
         ESP_LOGE("SD_CARD", "initialization failed: %s", esp_err_to_name(ret));
         return;
