@@ -18,6 +18,7 @@ project are:
 
 - [ ] learn the architecture of the ESP32 SoC and the IDF framework
 - [ ] make more use of C++'s stdlib
+- [ ] start writing tests
 - [ ] use a documentation tool
 - [ ] improve the knowledge of CMake
 - [ ] see up to what extent we can use AI in this microcontroller, i.e
