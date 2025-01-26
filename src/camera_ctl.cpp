@@ -2,64 +2,6 @@
 
 //uint8_t img[96*96];
 //uint8_t img_color[96 * 96 * 3]; // Allocate for color image (RGB)
-uint8_t img_color[160 * 120 * 3]; // Allocate for color image (RGB)
-
-
-
-void resizeColorImage(uint8_t *src, int srcWidth, int srcHeight, 
-                      uint8_t *dst, int dstWidth, int dstHeight) {
-    for (int y = 0; y < dstHeight; y++) {
-        for (int x = 0; x < dstWidth; x++) {
-            // Map destination coordinates to source coordinates
-            int srcX = x * srcWidth / dstWidth;
-            int srcY = y * srcHeight / dstHeight;
-
-            // Calculate source index in 24-bit array (RGB888)
-            int srcIndex = (srcY * srcWidth + srcX) * 3; // RGB888 = 3 bytes per pixel
-
-            // Extract RGB components
-            // swap r and b channels (because of bug in fmt2rgb888 function)
-            uint8_t b = src[srcIndex];
-            uint8_t g = src[srcIndex + 1];
-            uint8_t r = src[srcIndex + 2];
-
-            // Write to the destination array
-            int dstIndex = (y * dstWidth + x) * 3; // RGB888 = 3 bytes per pixel
-            dst[dstIndex] = r;
-            dst[dstIndex + 1] = g;
-            dst[dstIndex + 2] = b;
-        }
-    }
-}
-
-
-// Function to save an RGB888 image as a PPM file
-void saveAsPPM(const char *filename, uint8_t *image, int width, int height) {
-    // Open the file in binary write mode
-    FILE *file = fopen(filename, "wb");
-    if (!file) {
-        printf("Failed to open file: %s\n", filename);
-        return;
-    }
-
-    // Write the PPM header
-    fprintf(file, "P6\n%d %d\n255\n", width, height);
-
-    // Calculate the total number of pixels
-    int totalPixels = width * height;
-
-    // Write the RGB data to the file
-    if (fwrite(image, 1, totalPixels * 3, file) != totalPixels * 3) {
-        printf("Error writing image data to file\n");
-    }
-
-    // Close the file
-    fclose(file);
-
-    printf("PPM image saved successfully: %s\n", filename);
-}
-
-
 
 esp_err_t CameraCtl::init_camera(void)
 {
@@ -108,106 +50,12 @@ esp_err_t CameraCtl::init_camera(void)
 }
 
 
-void CameraCtl::capture(void *arg)
+void CameraCtl::capture(void)
 {    
     ESP_LOGI(CAM_TAG, "Starting Taking Picture!");
 
-    camera_fb_t *pic = esp_camera_fb_get();
-    
-    esp_camera_fb_return(pic);
-    //vTaskDelete(NULL);
-    ESP_LOGI(CAM_TAG, "Finished Taking Picture!");
-}
-
-
-/*
-void CameraCtl::capture_to_file(char *fname)
-{
-    ESP_LOGI(CAM_TAG, "Starting Taking Picture!");
-
-
     pic = esp_camera_fb_get();
-
-    resizeGrayImage(pic->buf,
-                    160, //srcWidth
-                    120, //srcHeight 
-                    img,  
-                    96, //dstWidth 
-                    96 );  //dstHeight
-
-
-    if (pic->format == PIXFORMAT_GRAYSCALE) 
-    {
-        FILE *file = fopen(fname, "w");
-        if (file) 
-        {
-            //writeBMPHeader(file, pic->width, pic->height);
-            writeBMPHeader(file, 96, 96);
-
-
-            for (int y = 96 - 1; y >= 0; y--) {
-                fwrite(img + (y * 96), 1, 96, file);
-            }
-
-            // Write pixel data (bottom-to-top for BMP format)
-            //for (int y = pic->height - 1; y >= 0; y--) {
-                //fwrite(pic->buf + (y * pic->width), 1, pic->width, file);
-           // }
-
-            fclose(file);
-
-        
-            ESP_LOGI(CAM_TAG,"Image saved as BMP");
-        } 
-        else 
-        {
-            ESP_LOGI(CAM_TAG,"Failed to open file");
-        }
-    } 
-    else 
-    {
-        ESP_LOGI(CAM_TAG,"Image format is not grayscale");
-    }
     
-    esp_camera_fb_return(pic);
-    //vTaskDelete(NULL);
-    ESP_LOGI(CAM_TAG, "Finished Taking Picture!");
-}
-*/
-
-
-void CameraCtl::capture_to_file(char *fname) {
-    ESP_LOGI(CAM_TAG, "Starting Taking Picture!");
-
-    camera_fb_t *pic = esp_camera_fb_get();
-
-    ESP_LOGI("Memory", "Free heap: %lu", esp_get_free_heap_size());
-
-    if (pic->format == PIXFORMAT_JPEG) {
-
-        fmt2rgb888(pic->buf, pic->len, PIXFORMAT_JPEG, img_color);
-
-        resizeColorImage(img_color, 160, 120, img_color, 96, 96);
-
-        saveAsPPM(fname, img_color, 96, 96);
-    
-
-
-        /*
-        FILE *file = fopen(fname, "w");
-        if (file) {
-
-            
-
-            fclose(file);
-            ESP_LOGI(CAM_TAG, "Image saved as PPM");
-        } else {
-            ESP_LOGI(CAM_TAG, "Failed to open file");
-            esp_camera_fb_return(pic);
-        }*/
-    }
-
-    esp_camera_fb_return(pic);
     ESP_LOGI(CAM_TAG, "Finished Taking Picture!");
 }
 

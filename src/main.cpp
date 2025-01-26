@@ -34,7 +34,6 @@
 #include "nvs_flash.h" // storing in nvs flash memory
 #include "freertos/FreeRTOS.h" //freertos for realtime opertaitons
 #include "freertos/task.h" // creating a task handler and assigning priority
-#include "esp_log.h" // printing out logs info this is to avoid printf statment
 
 #include "esp_bt.h"
 #include "esp_bt_main.h"
@@ -49,6 +48,10 @@ static const char *TAG = "WIFI_STA"; // Tag for logging
 
 QueueHandle_t gpio_evt_queue = NULL;  // FreeRTOS queue for GPIO events
 QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
+
+uint8_t img_buffer[160 * 120 * 3]; // Allocate for color image (RGB)
+void save_cam_image(char *fname, camera_fb_t *pic, uint8_t *img_buffer);
+
 
 
 //static atomic_bool is_wifi_connected = false; // Atomic flag for Wi-Fi connection status
@@ -240,7 +243,26 @@ void camera_task(void *p)
         //vTaskDelay(2500 / portTICK_PERIOD_MS);
         
         sprintf(photo_name, "/sdcard/pic_%u.ppm", i++);
-        cam.capture_to_file(photo_name);
+        cam.capture();
+        save_cam_image(photo_name, cam.pic, img_buffer);
+        cam.free_buffer();
+        ESP_LOGI(CAM_TAG, "Finished Taking Picture!");
+
         gpio_set_level(GPIO_NUM_33, 1);
+    }
+}
+
+
+void save_cam_image(char *fname, camera_fb_t *pic, uint8_t *img_buffer) {
+
+    //ESP_LOGI("Memory", "Free heap: %lu", esp_get_free_heap_size());
+
+    if (pic->format == PIXFORMAT_JPEG) {
+
+        fmt2rgb888(pic->buf, pic->len, PIXFORMAT_JPEG, img_buffer);
+
+        resizeColorImage(img_buffer, 160, 120, img_buffer, 96, 96);
+
+        saveAsPPM(fname, img_buffer, 96, 96);
     }
 }

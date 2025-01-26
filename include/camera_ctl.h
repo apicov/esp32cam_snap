@@ -3,6 +3,8 @@
 #include <esp_log.h>
 #include "esp_camera.h"
 #include "driver/i2c.h"
+#include "image_utils.h"
+
 
 #define I2C_MASTER_FREQ_HZ 100000        /*!< I2C master clock frequency */
 #define I2C_MASTER_TX_BUF_DISABLE 0                           /*!< I2C master doesn't need buffer */
@@ -44,8 +46,7 @@ class CameraCtl
         camera_fb_t *pic;
 
         esp_err_t init_camera(void);
-        void capture(void *arg);
-        void capture_to_file(char *fname);
+        void capture(void);
         void free_buffer();
     private:
         esp_err_t camera_xclk_init(uint32_t freq_hz);
