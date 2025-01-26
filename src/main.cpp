@@ -40,7 +40,6 @@ void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
 #include "nvs_flash.h" // storing in nvs flash memory
 #include "freertos/FreeRTOS.h" //freertos for realtime opertaitons
 #include "freertos/task.h" // creating a task handler and assigning priority
-
 #define SWITCH_GPIO GPIO_NUM_16
 static const char *TAG = "WIFI_STA"; // Tag for logging
 
