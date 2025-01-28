@@ -1,6 +1,7 @@
 {
     "files.associations": {
-        "cstring": "cpp"
+        "cstring": "cpp",
+        "atomic": "cpp"
     },
     "idf.flashType": "UART"
 }

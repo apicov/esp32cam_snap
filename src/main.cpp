@@ -25,12 +25,6 @@
 #include "camera_ctl.h"
 #include "sd_card.h"
 
-#include "esp_wifi.h"
-#include <stdatomic.h> 
-static atomic_bool is_wifi_connected = false; // Atomic flag for Wi-Fi connection status
-void wifi_init_sta();  // Initialize Wi-Fi in Station (STA) mode
-void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);  // Wi-Fi event handler
-
 
 #include <stdint.h>//lib for ints i-e int8_t upto 1int64_t
 #include <string.h> //for string data i-e char array
@@ -40,8 +34,12 @@ void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id
 #include "nvs_flash.h" // storing in nvs flash memory
 #include "freertos/FreeRTOS.h" //freertos for realtime opertaitons
 #include "freertos/task.h" // creating a task handler and assigning priority
-#define SWITCH_GPIO GPIO_NUM_16
-static const char *TAG = "WIFI_STA"; // Tag for logging
+
+#include "WiFiStation.hpp" //wifi station class
+
+
+
+static constexpr const char* TAG = "CAMERA";
 
 
 QueueHandle_t gpio_evt_queue = NULL;  // FreeRTOS queue for GPIO events
@@ -95,8 +93,6 @@ extern "C" void app_main()
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
-
-    wifi_init_sta(); // Initialize Wi-Fi in Station (STA) mode
 
     sdmmc_card_t *card;
     ret = initi_sd_card("/sdcard", &card);
@@ -181,63 +177,3 @@ void save_cam_image(char *fname, camera_fb_t *pic, uint8_t *img_buffer) {
     }
 }
 
-
-
-void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
-        esp_wifi_connect();
-    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        ESP_LOGI("WIFI_STA", "Wi-Fi disconnected, retrying...");
-        atomic_store(&is_wifi_connected, false); // Update flag atomically
-        esp_wifi_connect();
-    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
-        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-        ESP_LOGI("WIFI_STA", "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
-        atomic_store(&is_wifi_connected, true); // Update flag atomically
-    }
-}
-
-
-// Initialize Wi-Fi in Station (STA) mode
-void wifi_init_sta() {
-    // Initialize the TCP/IP stack
-    esp_netif_init();
-
-    // Create the default event loop
-    esp_event_loop_create_default();
-
-    // Create a default network interface for Wi-Fi station
-    esp_netif_create_default_wifi_sta();
-
-    // Initialize Wi-Fi driver with default configuration
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    esp_wifi_init(&cfg);
-
-    // Register event handlers for Wi-Fi and IP events
-    esp_event_handler_instance_t instance_any_id;
-    esp_event_handler_instance_t instance_got_ip;
-    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, &instance_any_id);
-    esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL, &instance_got_ip);
-
-    // Configure Wi-Fi connection settings
-    wifi_config_t wifi_config = {
-        .sta = {
-            .ssid = SSID,
-            .password = PASSWORD,
-            .threshold = {
-                .authmode = WIFI_AUTH_WPA2_PSK,
-            },
-        },
-    };
-
-    // Set Wi-Fi mode to Station
-    esp_wifi_set_mode(WIFI_MODE_STA);
-
-    // Apply the Wi-Fi configuration
-    esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
-
-    // Start the Wi-Fi driver
-    esp_wifi_start();
-
-    ESP_LOGI("WIFI_STA", "Wi-Fi initialized in Station mode");
-}
