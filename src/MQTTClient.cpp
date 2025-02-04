@@ -47,6 +47,25 @@ bool MQTTClient::is_connected() const {
 }
 
 
+void MQTTClient::publish(const char* topic, const char* data, int qos, int retain) {
+    // Check if the MQTT client is connected before attempting to publish
+    if (!is_connected_.load()) {
+        ESP_LOGW(TAG, "MQTT client is not connected. Cannot publish message.");
+        return;
+    }
+
+    // Publish the message to the specified topic with the given QoS and retain flag
+    int msg_id = esp_mqtt_client_publish(mqtt_client_, topic, data, 0, qos, retain);
+    
+    // Check if the message was published successfully
+    if (msg_id != -1) {
+        ESP_LOGI(TAG, "Message published successfully, msg_id=%d", msg_id);
+    } else {
+        ESP_LOGE(TAG, "Failed to publish message");
+    }
+}
+
+
 // Instance-level event handler
 void MQTTClient::event_handler(void* event_data) {
     auto event = (esp_mqtt_event_handle_t) event_data;

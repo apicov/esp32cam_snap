@@ -16,6 +16,7 @@ class MQTTClient {
     void init();
     void register_event_callback(int32_t event_id, MQTTEventCallback callback);
     bool is_connected() const;
+    void publish(const char* topic, const char* data, int qos, int retain); 
   private:
     std::atomic<bool> is_connected_;
     esp_mqtt_client_handle_t mqtt_client_ = NULL; // Global MQTT client handle
