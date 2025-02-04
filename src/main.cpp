@@ -36,7 +36,9 @@
 #include "freertos/task.h" // creating a task handler and assigning priority
 
 #include "WiFiStation.hpp" //wifi station class
-
+WiFiStation wifi(SSID, PASSWORD); //wifi object with ssid and password
+                                  //
+#include "MQTTClient.hpp" //mqtt client class
 
 
 static constexpr const char* TAG = "CAMERA";
@@ -55,7 +57,7 @@ void save_cam_image(char *fname, camera_fb_t *pic, uint8_t *img_buffer);
 
 
 void camera_task(void *p);
-void gpio_task(void *p);
+void mqtt_task(void *p);
 
 
 
@@ -70,6 +72,7 @@ void IRAM_ATTR gpio_isr_handler(void* arg)
 extern "C" void app_main()
 {
     ESP_LOGI(TAG, "application started");
+
 
     // Allocate for color image (RGB) in external ram
    img_buffer = (uint8_t*)heap_caps_malloc(160 * 120 * 3, MALLOC_CAP_SPIRAM);
@@ -101,9 +104,14 @@ extern "C" void app_main()
         return;
     }
 
+
+    //initialize WiFi
+    wifi.init();
+
     vTaskDelay(5000 / portTICK_PERIOD_MS);
 
     xTaskCreate(camera_task, "camera",4096, NULL, 5, NULL);
+    xTaskCreate(mqtt_task, "mqtt",4096, NULL, 5, NULL);
     //xTaskCreate(gpio_task, "main", 4096, NULL, 5, NULL);
 
     //gpio_install_isr_service(0);
@@ -112,18 +120,26 @@ extern "C" void app_main()
     //heap_caps_free(img_buffer); // Free when done
 } // end of app_main   
 
-void gpio_task(void* arg)
-{
-    int gpio_num;
-    while (1)
-    {
-        if (xQueueReceive(gpio_evt_queue, &gpio_num, portMAX_DELAY))
-        {
-            printf("GPIO %d interrupt received\n", gpio_num);
-            // Perform further processing (e.g., debounce logic)
-        }
-    }
+
+MQTTClient mqtt(MQTT_URI);
+
+void mqtt_task(void *p){
+  //wait for wifi to connect
+  while(!wifi.is_connected()){
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+  ESP_LOGI(TAG, "wifi connected");
+
+  //initialize mqtt client
+  mqtt.init();
+  ESP_LOGI(TAG, "mqtt client initialized");
+
+  while(true){
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
 }
+
+
 
 CameraCtl cam;
 

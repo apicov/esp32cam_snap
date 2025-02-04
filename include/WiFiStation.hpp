@@ -15,11 +15,11 @@ struct pair_hash {
     }
 };
 
-class WifiStation {
+class WiFiStation {
 public:
     // Type alias for event callback
     using WifiEventCallback = std::function<void(void*)>;
-    WifiStation(const char* ssid, const char* password);
+    WiFiStation(const char* ssid, const char* password);
     void init();
     void register_event_callback(esp_event_base_t event_base, int32_t event_id, WifiEventCallback callback);
     bool is_connected() const;
@@ -27,6 +27,7 @@ public:
 private:
     const char* ssid_;
     const char* password_;
+    const char* mqtt_broker_uri_;
     std::atomic<bool> is_connected_;
     esp_event_handler_instance_t instance_any_id_;
     esp_event_handler_instance_t instance_ip_event_;
