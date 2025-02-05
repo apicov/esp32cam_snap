@@ -35,6 +35,8 @@
 #include "freertos/FreeRTOS.h" //freertos for realtime opertaitons
 #include "freertos/task.h" // creating a task handler and assigning priority
 
+#include "mbedtls/base64.h"
+
 #include "WiFiStation.hpp" //wifi station class
 WiFiStation wifi(SSID, PASSWORD); //wifi object with ssid and password
                                   //
@@ -52,6 +54,8 @@ uint8_t  *img_buffer;
 void save_cam_image(char *fname, camera_fb_t *pic, uint8_t *img_buffer);
 
 
+char  *b64_buffer; //buffer for base64 encoding
+void base64_encode(const uint8_t *input, size_t input_len, char *output, size_t output_len); 
 
 //static esp_mqtt_client_handle_t mqtt_client = NULL; // Global MQTT client handle
 
@@ -60,26 +64,30 @@ void camera_task(void *p);
 void mqtt_task(void *p);
 
 
-
-/*
-void IRAM_ATTR gpio_isr_handler(void* arg)
-{
-    int gpio_num = (int)arg; // Get GPIO number
-    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL); // Send to queue
-}
-*/
+size_t b64_size;
 
 extern "C" void app_main()
 {
     ESP_LOGI(TAG, "application started");
 
-
+    size_t image_size = 160 * 120 * 3;
     // Allocate for color image (RGB) in external ram
-   img_buffer = (uint8_t*)heap_caps_malloc(160 * 120 * 3, MALLOC_CAP_SPIRAM);
+    img_buffer = (uint8_t*)heap_caps_malloc(image_size, MALLOC_CAP_SPIRAM);
     if (img_buffer == NULL) {
+      printf("failed to allocate memory in psram\n");
+      return;
+    }
+  
+    // Calculate the required output buffer size for Base64 encoding
+    b64_size = (4 * ((image_size + 2) / 3)) + 1;  // +1 for the null terminator
+
+    // Allocate base64_encode  in external ram
+    b64_buffer = (char*)heap_caps_malloc(b64_size, MALLOC_CAP_SPIRAM);
+    if ( b64_buffer == NULL) {
         printf("Failed to allocate memory in PSRAM\n");
         return;
     }
+
 
     gpio_set_direction(GPIO_NUM_33, GPIO_MODE_OUTPUT);
 
@@ -161,20 +169,34 @@ void camera_task(void *p)
 
     while(1)
     {
-        xQueueReceive(camera_evt_queue, &cmd, portMAX_DELAY);
+        //xQueueReceive(camera_evt_queue, &cmd, portMAX_DELAY);
+        if(mqtt.is_connected()){
+            gpio_set_level(GPIO_NUM_33, 0);
+            //vTaskDelay(2500 / portTICK_PERIOD_MS);
+            //gpio_set_level(GPIO_NUM_33, 0);
+            //vTaskDelay(2500 / portTICK_PERIOD_MS);
+            
+            //sprintf(photo_name, "/sdcard/pic_%u.ppm", i++);
+            cam.capture();
 
-        gpio_set_level(GPIO_NUM_33, 0);
-        //vTaskDelay(2500 / portTICK_PERIOD_MS);
-        //gpio_set_level(GPIO_NUM_33, 0);
-        //vTaskDelay(2500 / portTICK_PERIOD_MS);
-        
-        sprintf(photo_name, "/sdcard/pic_%u.ppm", i++);
-        cam.capture();
-        save_cam_image(photo_name, cam.pic, img_buffer);
-        cam.free_buffer();
-        ESP_LOGI(CAM_TAG, "Finished Taking Picture!");
+            //convert image to base64
+            base64_encode(cam.pic->buf, cam.pic->len, b64_buffer, b64_size);
+            
+            //publish encoded image
+            mqtt.publish("/topic/img", b64_buffer, 0, 0);
+            ESP_LOGI(TAG, "image sent");
 
-        gpio_set_level(GPIO_NUM_33, 1);
+            //save_cam_image(photo_name, cam.pic, img_buffer);
+            cam.free_buffer();
+            ESP_LOGI(CAM_TAG, "Finished Taking Picture!");
+
+            gpio_set_level(GPIO_NUM_33, 1);
+            vTaskDelay(5000 / portTICK_PERIOD_MS);
+        }
+        else{
+            ESP_LOGE(TAG, "MQTT not connected");
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
     }
 }
 
@@ -193,3 +215,11 @@ void save_cam_image(char *fname, camera_fb_t *pic, uint8_t *img_buffer) {
     }
 }
 
+
+
+void base64_encode(const uint8_t *input, size_t input_len, char *output, size_t output_len) {
+    size_t olen = 0;
+    int ret = mbedtls_base64_encode((unsigned char *)output, output_len, &olen, input, input_len);
+    if (ret != 0) {
+        ESP_LOGE("BASE64", "Base64 encoding failed with error code: %d", ret);
+    } }
