@@ -183,12 +183,11 @@ void camera_task(void *p)
             base64_encode(cam.pic->buf, cam.pic->len, b64_buffer, b64_size);
             
             //publish encoded image
-            mqtt.publish("/topic/img", b64_buffer, 0, 0);
+            mqtt.publish("/camera/img", b64_buffer, 2, 0);
             ESP_LOGI(TAG, "image sent");
 
             //save_cam_image(photo_name, cam.pic, img_buffer);
             cam.free_buffer();
-            ESP_LOGI(CAM_TAG, "Finished Taking Picture!");
 
             gpio_set_level(GPIO_NUM_33, 1);
             vTaskDelay(5000 / portTICK_PERIOD_MS);

@@ -53,6 +53,10 @@ void MQTTClient::publish(const char* topic, const char* data, int qos, int retai
         ESP_LOGW(TAG, "MQTT client is not connected. Cannot publish message.");
         return;
     }
+    
+esp_err_t subscribe(const char* topic, int qos){
+    return esp_mqtt_client_subscribe(mqtt_client_, topic, qos);
+}
 
     // Publish the message to the specified topic with the given QoS and retain flag
     int msg_id = esp_mqtt_client_publish(mqtt_client_, topic, data, 0, qos, retain);
@@ -88,7 +92,14 @@ void MQTTClient::set_default_handlers() {
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
         is_connected_.store(true);
         // Publish a message after connection
-        esp_mqtt_client_publish(mqtt_client_, "/topic/test", "Hello from ESP32!", 0, 1, 0);
+    int msg_id = esp_mqtt_client_publish(
+        mqtt_client_,          // The MQTT client handle obtained from esp_mqtt_client_init
+        "/topic/test",         // The topic to which the message will be published
+        "Hello from ESP32!",   // The message payload to be published
+        0,                     // The length of the message payload; 0 means use strlen(data)
+        1,                     // The Quality of Service level (QoS); 1 means at least once delivery
+        0                      // The retain flag; 0 means the message will not be retained by the broker
+    );
     });
 
     // Triggered when the client disconnects from the broker
