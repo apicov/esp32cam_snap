@@ -114,54 +114,44 @@ extern "C" void app_main()
         return;
     }
 
+    ret = cam.init_camera();
+    if (ret != ESP_OK)
+    {
+        ESP_LOGE(TAG, "err: %s\n", esp_err_to_name(ret));
+        return;
+    }
 
     //initialize WiFi
     wifi.init();
+    ESP_LOGI(TAG, "wifi connected");
 
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    //wait for wifi to connect
+    while(!wifi.is_connected()){
+      vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+    //initialize mqtt client
+    mqtt.init();
+
+    mqtt.register_event_callback(MQTT_EVENT_CONNECTED, [](void* event_data) {
+        ESP_LOGI(TAG, "MQTT_CONNECTED");
+        mqtt.subscribe("/camera/cmd", 0);
+        });
+
+    ESP_LOGI(TAG, "mqtt client initialized");
+
+    //vTaskDelay(5000 / portTICK_PERIOD_MS);
 
     xTaskCreate(camera_task, "camera",4096, NULL, 5, NULL);
-    xTaskCreate(mqtt_task, "mqtt",4096, NULL, 5, NULL);
+    //xTaskCreate(mqtt_task, "mqtt",4096, NULL, 5, NULL);
     //xTaskCreate(gpio_task, "main", 4096, NULL, 5, NULL);
-
-    //gpio_install_isr_service(0);
-    //gpio_isr_handler_add(SWITCH_GPIO, gpio_isr_handler, (void *)SWITCH_GPIO);
-
-    //heap_caps_free(img_buffer); // Free when done
+   //heap_caps_free(img_buffer); // Free when done
 } // end of app_main   
-
-
-
-void mqtt_task(void *p){
-  //wait for wifi to connect
-  while(!wifi.is_connected()){
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-  }
-  ESP_LOGI(TAG, "wifi connected");
-
-  //initialize mqtt client
-  mqtt.init();
-  ESP_LOGI(TAG, "mqtt client initialized");
-
-  while(true){
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-  }
-}
 
 
 void camera_task(void *p)
 {
     
     char photo_name[50];
-
-    esp_err_t err;
-    err = cam.init_camera();
-    if (err != ESP_OK)
-    {
-        printf("err: %s\n", esp_err_to_name(err));
-        return;
-    }
-    ESP_LOGE(TAG, "camera initialized");
     unsigned int i = 0;
     uint8_t cmd;
 
