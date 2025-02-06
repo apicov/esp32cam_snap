@@ -22,7 +22,6 @@
 
 //#include "mqtt_client.h"
 #include "private_data.h"
-#include "camera_ctl.h"
 #include "sd_card.h"
 
 
@@ -37,13 +36,16 @@
 
 #include "mbedtls/base64.h"
 
-#include "WiFiStation.hpp" //wifi station class
-WiFiStation wifi(SSID, PASSWORD); //wifi object with ssid and password
-                                  //
+#include "camera_ctl.h"
+#include "WiFiStation.hpp" //wifi station class                                  
 #include "MQTTClient.hpp" //mqtt client class
 
+WiFiStation wifi(SSID, PASSWORD); //wifi object with ssid and password
+MQTTClient mqtt(MQTT_URI); //mqtt object with broker uri
+CameraCtl cam; 
 
 static constexpr const char* TAG = "CAMERA";
+
 
 
 QueueHandle_t gpio_evt_queue = NULL;  // FreeRTOS queue for GPIO events
@@ -129,7 +131,6 @@ extern "C" void app_main()
 } // end of app_main   
 
 
-MQTTClient mqtt(MQTT_URI);
 
 void mqtt_task(void *p){
   //wait for wifi to connect
@@ -147,9 +148,6 @@ void mqtt_task(void *p){
   }
 }
 
-
-
-CameraCtl cam;
 
 void camera_task(void *p)
 {

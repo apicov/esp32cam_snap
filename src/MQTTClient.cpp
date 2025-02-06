@@ -53,10 +53,6 @@ void MQTTClient::publish(const char* topic, const char* data, int qos, int retai
         ESP_LOGW(TAG, "MQTT client is not connected. Cannot publish message.");
         return;
     }
-    
-esp_err_t subscribe(const char* topic, int qos){
-    return esp_mqtt_client_subscribe(mqtt_client_, topic, qos);
-}
 
     // Publish the message to the specified topic with the given QoS and retain flag
     int msg_id = esp_mqtt_client_publish(mqtt_client_, topic, data, 0, qos, retain);
@@ -69,6 +65,9 @@ esp_err_t subscribe(const char* topic, int qos){
     }
 }
 
+esp_err_t MQTTClient::subscribe(const char* topic, int qos){
+    return esp_mqtt_client_subscribe(mqtt_client_, topic, qos);
+}
 
 // Instance-level event handler
 void MQTTClient::event_handler(void* event_data) {
