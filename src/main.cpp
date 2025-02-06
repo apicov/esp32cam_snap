@@ -132,7 +132,7 @@ extern "C" void app_main()
     //initialize mqtt client
     mqtt.init();
 
-    mqtt.register_event_callback(MQTT_EVENT_CONNECTED, [](void* event_data) {
+    mqtt.register_event_callback(MQTT_EVENT_CONNECTED, [](esp_mqtt_event_handle_t event_data) {
         ESP_LOGI(TAG, "MQTT_CONNECTED");
         mqtt.subscribe("/camera/cmd", 0);
         });

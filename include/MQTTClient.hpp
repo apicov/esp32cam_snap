@@ -2,16 +2,14 @@
 #include <atomic>
 #include <functional>
 
-extern "C" {
-  #include "mqtt_client.h"
-  #include "esp_event.h"
-  #include "esp_log.h"
-}
+#include "mqtt_client.h"
+#include "esp_event.h"
+#include "esp_log.h"
 
 
 class MQTTClient {
-  public:
-    using MQTTEventCallback = std::function<void(void*)>;
+  public:  
+    using MQTTEventCallback = std::function<void(esp_mqtt_event_handle_t)>;
     MQTTClient(const char* uri);
     void init();
     void register_event_callback(int32_t event_id, MQTTEventCallback callback);
@@ -27,7 +25,7 @@ class MQTTClient {
     // Static event handler required by the ESP-IDF
     static void event_handler_static(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
     // Instance-level event handler
-    void event_handler(void* event_data); 
+    void event_handler(esp_mqtt_event_handle_t event_data); 
     // Set default handlers for Wi-Fi and IP events
     void set_default_handlers();
   };
