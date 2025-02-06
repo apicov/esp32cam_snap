@@ -54,7 +54,7 @@ void MQTTClient::publish(const char* topic, const char* data, int qos, int retai
         return;
     }
     
-esp_err_t subscribe(const char* topic, int qos){
+esp_err_t MQTTClient::subscribe(const char* topic, int qos){
     return esp_mqtt_client_subscribe(mqtt_client_, topic, qos);
 }
 
