@@ -47,7 +47,6 @@ CameraCtl cam;
 static constexpr const char* TAG = "CAMERA";
 
 
-
 QueueHandle_t gpio_evt_queue = NULL;  // FreeRTOS queue for GPIO events
 QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
 
@@ -65,6 +64,7 @@ void base64_encode(const uint8_t *input, size_t input_len, char *output, size_t 
 void camera_task(void *p);
 void mqtt_task(void *p);
 
+void start_mqtt_client();
 
 size_t b64_size;
 
@@ -123,21 +123,14 @@ extern "C" void app_main()
 
     //initialize WiFi
     wifi.init();
-    ESP_LOGI(TAG, "wifi connected");
 
-    //wait for wifi to connect
-    while(!wifi.is_connected()){
-      vTaskDelay(500 / portTICK_PERIOD_MS);
-    }
-    //initialize mqtt client
-    mqtt.init();
-
-    mqtt.register_event_callback(MQTT_EVENT_CONNECTED, [](esp_mqtt_event_handle_t event_data) {
-        ESP_LOGI(TAG, "MQTT_CONNECTED");
-        mqtt.subscribe("/camera/cmd", 0);
+    wifi.register_event_callback( IP_EVENT, IP_EVENT_STA_GOT_IP, [](void* event_data) {
+        auto* event = static_cast<ip_event_got_ip_t*>(event_data);
+        ESP_LOGI(TAG, "wifi connected");
+        ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
+        //start mqtt client when wifi is connected
+        start_mqtt_client();
         });
-
-    ESP_LOGI(TAG, "mqtt client initialized");
 
     //vTaskDelay(5000 / portTICK_PERIOD_MS);
 
@@ -187,6 +180,17 @@ void camera_task(void *p)
     }
 }
 
+void start_mqtt_client(){
+    //initialize mqtt client
+    mqtt.init();
+
+    mqtt.register_event_callback(MQTT_EVENT_CONNECTED, [](esp_mqtt_event_handle_t event_data) {
+        ESP_LOGI(TAG, "MQTT_CONNECTED");
+        mqtt.subscribe("/camera/cmd", 0);
+        });
+
+    ESP_LOGI(TAG, "mqtt client initialized");
+}
 
 void save_cam_image(char *fname, camera_fb_t *pic, uint8_t *img_buffer) {
 
