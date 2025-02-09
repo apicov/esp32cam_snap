@@ -7,7 +7,7 @@
 #include "driver/gpio.h"
 #include "esp_heap_caps.h"
 //#include <inttypes.h> // For PRIu32
-
+#include <string.h>
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/micro/system_setup.h"
@@ -47,7 +47,6 @@ CameraCtl cam;
 static constexpr const char* TAG = "CAMERA";
 
 
-QueueHandle_t gpio_evt_queue = NULL;  // FreeRTOS queue for GPIO events
 QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
 
 //This macro explicitly places the variable in external PSRAM.
@@ -96,7 +95,6 @@ extern "C" void app_main()
     //gpio_set_direction(SWITCH_GPIO, GPIO_MODE_INPUT);
     //gpio_set_intr_type(SWITCH_GPIO, GPIO_INTR_NEGEDGE);
 
-    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
     camera_evt_queue = xQueueCreate(10, sizeof(uint8_t));
 
     // Initialize NVS
@@ -150,7 +148,9 @@ void camera_task(void *p)
 
     while(1)
     {
-        //xQueueReceive(camera_evt_queue, &cmd, portMAX_DELAY);
+        //wait for mqtt command
+        xQueueReceive(camera_evt_queue, &cmd, portMAX_DELAY);
+
         if(mqtt.is_connected()){
             gpio_set_level(GPIO_NUM_33, 0);
             //vTaskDelay(2500 / portTICK_PERIOD_MS);
@@ -188,6 +188,22 @@ void start_mqtt_client(){
         ESP_LOGI(TAG, "MQTT_CONNECTED");
         mqtt.subscribe("/camera/cmd", 0);
         });
+
+    // Triggered when the client receives data from a subscribed topic
+    mqtt.register_event_callback(MQTT_EVENT_DATA, [](esp_mqtt_event_handle_t event_data) {
+        uint8_t cmd = 1; //dummy data to send to the queue
+        ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+        ESP_LOGI(TAG, "Received topic: %.*s", event_data->topic_len, event_data->topic);
+        ESP_LOGI(TAG, "Received data: %.*s", event_data->data_len, event_data->data);
+
+        // Check if the received message is a snap command
+        if (strncmp(event_data->topic, "/camera/cmd", event_data->topic_len) == 0) {
+            if (strncmp(event_data->data, "snap", event_data->data_len) == 0) {
+                ESP_LOGI(TAG, "snap command received");
+                xQueueSend(camera_evt_queue, &cmd, 0);
+            }
+        }
+    });
 
     ESP_LOGI(TAG, "mqtt client initialized");
 }
