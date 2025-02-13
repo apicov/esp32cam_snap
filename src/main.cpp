@@ -193,11 +193,8 @@ extern "C" void app_main()
     vTaskDelay(5000 / portTICK_PERIOD_MS);
 
     xTaskCreate(camera_task, "camera",8192, NULL, 5, NULL);
-    //xTaskCreate(gpio_task, "main", 4096, NULL, 5, NULL);
-
-    //gpio_install_isr_service(0);
-    //gpio_isr_handler_add(SWITCH_GPIO, gpio_isr_handler, (void *)SWITCH_GPIO);
-} // end of app_main   
+    ESP_LOGI(__func__, "ESP32-cam_AI is running");
+    } // end of app_main
 
 void gpio_task(void* arg)
 {
