@@ -15,6 +15,6 @@ To run the tests in this folder, execute the following command from this
 project's root folder:
 
 ```shell
-$ pytest test
+$ pytest tests/
 ```
 
