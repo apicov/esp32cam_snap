@@ -1,6 +1,6 @@
 # Build the project
 
-After cloning this project, it should be possible to build it either with `IDF` or with platformio. The following steps will walk you to build the project.
+After cloning this project, it should be possible to build it either with `IDF`. The following steps will walk you to build the project.
 
 ## Install dependencies
 
@@ -29,8 +29,3 @@ After cloning this project, it should be possible to build it either with `IDF` 
   ```
 
   To exit the monitor use `Ctrl + ]`.
-
-## Build with PlatformIO (optional)
-
-1. Click on the PlatformIO: Build option (little checkmark on the menu at the bottom of the screen)
-2. Click on the PlatformIO: Load options (little right pointing arrow on the menu at the botton of the screen)  
