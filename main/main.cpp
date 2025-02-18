@@ -135,8 +135,10 @@ extern "C" void app_main()
     xTaskCreate(camera_task, "camera",4096, NULL, 5, NULL);
     //xTaskCreate(mqtt_task, "mqtt",4096, NULL, 5, NULL);
     //xTaskCreate(gpio_task, "main", 4096, NULL, 5, NULL);
-   //heap_caps_free(img_buffer); // Free when done
-} // end of app_main   
+    //heap_caps_free(img_buffer); // Free when done
+
+    ESP_LOGI(__func__, "ESP32-cam_AI is running");
+} // end of app_main
 
 
 void camera_task(void *p)
