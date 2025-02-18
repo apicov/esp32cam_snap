@@ -4,6 +4,8 @@ build
 components/*
 !components/camera_ctl
 !components/sd_card
+!components/mqtt_client
+!components/wifi_station
 managed_components
 private_data.h
 sdkconfig.esp32dev.old

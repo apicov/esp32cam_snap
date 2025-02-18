@@ -1,15 +1,21 @@
 dependencies:
   espressif/esp-nn:
     component_hash: f6f2851ce82137a66e4265071c9b852bbe0130b882a18dea9f03faea7bf1295a
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=4.2'
     source:
-      service_url: https://api.components.espressif.com/
+      registry_url: https://components.espressif.com/
       type: service
     version: 1.1.0
   idf:
-    component_hash: null
     source:
       type: idf
-    version: 5.3.1
-manifest_hash: e010b537eee698218ca6e8bed5037290beb93024149db28394e43749de590a68
+    version: 5.4.0
+direct_dependencies:
+- espressif/esp-nn
+- idf
+manifest_hash: 39cfdce94e11e0581abd0806680ca9d6092153d4bc2bed02301e9ebe9479fb31
 target: esp32
-version: 1.0.0
+version: 2.0.0
