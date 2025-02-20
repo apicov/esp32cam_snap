@@ -10,7 +10,6 @@ After cloning this project, it should be possible to build it either with `IDF`.
   cd $PROJECT_PATH/esp32-cam_AI
   mkdir components && cd components
   git clone https://github.com/espressif/esp32-camera.git
-  git clone https://github.com/uktechbr/espidf-flatbuffers.git
   git clone https://github.com/apicov/esp-tflite-micro.git
 
   # set the array branch of esp-tflite-micro
