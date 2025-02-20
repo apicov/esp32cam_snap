@@ -4,9 +4,9 @@ The purpose of this file is to outline some ideas and targets for this
 project. The outline doesn't have an order and may change continuously as the
 priority/interests shift.
 
-The aim of this project is to create that can be used by more people, although
-the final product isn't yet clear, we want to use this project as means to learn
-different development tools/libraries.
+The aim of this project is to create something that can be used by more people,
+although the final product isn't clear yet, we want to use this project as a mean 
+to learn different development tools/libraries.
 
 Many of the points outlined in the following sections may endup as project
 "Issues" so we can approach them independently.
