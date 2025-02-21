@@ -6,9 +6,5 @@ documentation: https://github.com/apicov/esp32-cam_AI/blob/main/README.md
 
 dependencies:
   idf: "~5.4"
-
-  espressif/esp32-camera:
-    git: https://github.com/espressif/esp32-camera.git
-
-  esp-tflite-micro:
-    git: https://github.com/apicov/esp-tflite-micro.git
+  espressif/esp32-camera: "~2.0"
+  espressif/esp-tflite-micro: "~1.3"
