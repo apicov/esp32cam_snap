@@ -51,6 +51,7 @@ MQTTClient mqtt(MQTT_URI); //mqtt object with broker uri
 CameraCtl cam;
 QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
 uint8_t  *img_buffer;
+
 char  *b64_buffer; //buffer for base64 encoding
 size_t b64_size;
 
@@ -78,9 +79,6 @@ extern "C" void app_main()
 
 
     gpio_set_direction(GPIO_NUM_33, GPIO_MODE_OUTPUT);
-
-    //gpio_set_direction(SWITCH_GPIO, GPIO_MODE_INPUT);
-    //gpio_set_intr_type(SWITCH_GPIO, GPIO_INTR_NEGEDGE);
 
     camera_evt_queue = xQueueCreate(10, sizeof(uint8_t));
 
@@ -117,12 +115,7 @@ extern "C" void app_main()
         start_mqtt_client();
         });
 
-    //vTaskDelay(5000 / portTICK_PERIOD_MS);
-
     xTaskCreate(camera_task, "camera",4096, NULL, 5, NULL);
-    //xTaskCreate(mqtt_task, "mqtt",4096, NULL, 5, NULL);
-    //xTaskCreate(gpio_task, "main", 4096, NULL, 5, NULL);
-    //heap_caps_free(img_buffer); // Free when done
 
     ESP_LOGI(__func__, "ESP32-cam_AI is running");
 } // end of app_main
@@ -142,9 +135,6 @@ void camera_task(void *p)
 
         if(mqtt.is_connected()){
             gpio_set_level(GPIO_NUM_33, 0);
-            //vTaskDelay(2500 / portTICK_PERIOD_MS);
-            //gpio_set_level(GPIO_NUM_33, 0);
-            //vTaskDelay(2500 / portTICK_PERIOD_MS);
 
             //sprintf(photo_name, "/sdcard/pic_%u.ppm", i++);
             cam.capture();
@@ -199,18 +189,12 @@ void start_mqtt_client(){
 
 void save_cam_image(char *fname, camera_fb_t *pic, uint8_t *img_buffer) {
 
-    //ESP_LOGI("Memory", "Free heap: %lu", esp_get_free_heap_size());
-
     if (pic->format == PIXFORMAT_JPEG) {
-
         fmt2rgb888(pic->buf, pic->len, PIXFORMAT_JPEG, img_buffer);
-
         resizeColorImage(img_buffer, 160, 120, img_buffer, 96, 96);
-
         saveAsPPM(fname, img_buffer, 96, 96);
     }
 }
-
 
 
 void base64_encode(const uint8_t *input, size_t input_len, char *output, size_t output_len) {
