@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <cstring>
 #include <cstdio>
 
 // ESP-IDF
@@ -43,8 +42,8 @@ void start_mqtt_client();
 void base64_encode(const uint8_t *in, size_t in_len, char *out, size_t out_len);
 
 /* globals */
-WiFiStation wifi(SSID, PASSWORD); //wifi object with ssid and password
-MQTTClient mqtt(MQTT_URI); //mqtt object with broker uri
+WiFiStation wifi(SSID, PASSWORD);
+MQTTClient mqtt(MQTT_URI); //MQTT object with broker uri
 
 CameraCtl cam;
 QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
@@ -54,7 +53,7 @@ size_t b64_size;
 
 extern "C" void app_main()
 {
-    ESP_LOGI(TAG, "application started");
+    ESP_LOGI(TAG, "starting...");
 
     // TODO: if the image resolution can be adjusted, then it might be
     // a good idea to make the dimensions configurable
@@ -64,17 +63,19 @@ extern "C" void app_main()
     b64_size = (4 * ((image_size + 2) / 3)) + 1;  // +1 for the null terminator
 
     // Allocate base64_encode in external ram
+    // TODO: does it have to be in external RAM?
     b64_buffer = (char*)heap_caps_malloc(b64_size, MALLOC_CAP_SPIRAM);
     if ( b64_buffer == NULL) {
-        printf("Failed to allocate memory in PSRAM\n");
+        ESP_LOGE(TAG, "Failed to allocate memory in PSRAM");
         return;
     }
 
+    // initialize components ...
+
+    // gpio
     gpio_set_direction(GPIO_NUM_33, GPIO_MODE_OUTPUT);
 
-    camera_evt_queue = xQueueCreate(10, sizeof(uint8_t));
-
-    // Initialize NVS
+    // nvs
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
@@ -82,26 +83,27 @@ extern "C" void app_main()
     }
     ESP_ERROR_CHECK(ret);
 
-
+    // camera
     ret = cam.init_camera();
     if (ret != ESP_OK)
     {
-        ESP_LOGE(TAG, "err: %s\n", esp_err_to_name(ret));
+        ESP_LOGE(TAG, "err: %s", esp_err_to_name(ret));
         return;
     }
 
-    //initialize WiFi
+    // WiFi
     wifi.init();
-
-    wifi.register_event_callback( IP_EVENT, IP_EVENT_STA_GOT_IP, [](void* event_data) {
-        auto* event = static_cast<ip_event_got_ip_t*>(event_data);
-        ESP_LOGI(TAG, "wifi connected");
-        ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
-        //start mqtt client when wifi is connected
+    wifi.register_event_callback( IP_EVENT, IP_EVENT_STA_GOT_IP, [](auto event_data) {
+        auto event = static_cast<ip_event_got_ip_t*>(event_data);
+        ESP_LOGI(TAG, "wifi connected with IP: ", IPSTR, IP2STR(&event->ip_info.ip));
         start_mqtt_client();
-        });
+    });
 
-    xTaskCreate(camera_task, "camera",4096, NULL, 5, NULL);
+    // queues
+    camera_evt_queue = xQueueCreate(10, sizeof(uint8_t));
+
+    // tasks
+    xTaskCreate(camera_task, "camera", 4096, NULL, 5, NULL);
 
     ESP_LOGI(__func__, "ESP32-cam_AI is running");
 } // end of app_main
@@ -144,13 +146,13 @@ void start_mqtt_client(){
     //initialize mqtt client
     mqtt.init();
 
-    mqtt.register_event_callback(MQTT_EVENT_CONNECTED, [](esp_mqtt_event_handle_t event_data) {
-        ESP_LOGI(TAG, "MQTT_CONNECTED");
+    mqtt.register_event_callback(MQTT_EVENT_CONNECTED, [](auto event_data) {
+        ESP_LOGI(TAG, "MQTT_connected");
         mqtt.subscribe("/camera/cmd", 0);
-        });
+    });
 
     // Triggered when the client receives data from a subscribed topic
-    mqtt.register_event_callback(MQTT_EVENT_DATA, [](esp_mqtt_event_handle_t event_data) {
+    mqtt.register_event_callback(MQTT_EVENT_DATA, [](auto event_data) {
         uint8_t cmd = 1; //dummy data to send to the queue
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
         ESP_LOGI(TAG, "Received topic: %.*s", event_data->topic_len, event_data->topic);
