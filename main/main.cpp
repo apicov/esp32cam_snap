@@ -84,12 +84,7 @@ extern "C" void app_main()
     ESP_ERROR_CHECK(ret);
 
     // camera
-    ret = cam.init_camera();
-    if (ret != ESP_OK)
-    {
-        ESP_LOGE(TAG, "err: %s", esp_err_to_name(ret));
-        return;
-    }
+    ESP_ERROR_CHECK(cam.init_camera());
 
     // WiFi
     wifi.init();
