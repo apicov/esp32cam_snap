@@ -33,8 +33,6 @@
 // Application configuration
 #include "private_data.h"
 
-static const char* TAG = "APP_MAIN";
-
 /* prototypes */
 void camera_task(void *p);
 void mqtt_task(void *p);
@@ -53,7 +51,7 @@ size_t b64_size;
 
 extern "C" void app_main()
 {
-    ESP_LOGI(TAG, "starting...");
+    ESP_LOGI(__func__, "starting...");
 
     // TODO: if the image resolution can be adjusted, then it might be
     // a good idea to make the dimensions configurable
@@ -66,7 +64,7 @@ extern "C" void app_main()
     // TODO: does it have to be in external RAM?
     b64_buffer = (char*)heap_caps_malloc(b64_size, MALLOC_CAP_SPIRAM);
     if ( b64_buffer == NULL) {
-        ESP_LOGE(TAG, "Failed to allocate memory in PSRAM");
+        ESP_LOGE(__func__, "Failed to allocate memory in PSRAM");
         return;
     }
 
@@ -90,7 +88,7 @@ extern "C" void app_main()
     wifi.init();
     wifi.register_event_callback( IP_EVENT, IP_EVENT_STA_GOT_IP, [](auto event_data) {
         auto event = static_cast<ip_event_got_ip_t*>(event_data);
-        ESP_LOGI(TAG, "wifi connected with IP: ", IPSTR, IP2STR(&event->ip_info.ip));
+        ESP_LOGI(__func__, "wifi connected with IP: " IPSTR, IP2STR(&event->ip_info.ip));
         start_mqtt_client();
     });
 
@@ -123,7 +121,7 @@ void camera_task(void *p)
 
             //publish encoded image
             mqtt.publish("/camera/img", b64_buffer, 2, 0);
-            ESP_LOGI(TAG, "image sent");
+            ESP_LOGI(__func__, "image sent");
 
             cam.free_buffer();
 
@@ -131,7 +129,7 @@ void camera_task(void *p)
             vTaskDelay(5000 / portTICK_PERIOD_MS);
         }
         else{
-            ESP_LOGE(TAG, "MQTT not connected");
+            ESP_LOGE(__func__, "MQTT not connected");
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
     }
@@ -142,27 +140,27 @@ void start_mqtt_client(){
     mqtt.init();
 
     mqtt.register_event_callback(MQTT_EVENT_CONNECTED, [](auto event_data) {
-        ESP_LOGI(TAG, "MQTT_connected");
+        ESP_LOGI(__func__, "MQTT_connected");
         mqtt.subscribe("/camera/cmd", 0);
     });
 
     // Triggered when the client receives data from a subscribed topic
     mqtt.register_event_callback(MQTT_EVENT_DATA, [](auto event_data) {
         uint8_t cmd = 1; //dummy data to send to the queue
-        ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-        ESP_LOGI(TAG, "Received topic: %.*s", event_data->topic_len, event_data->topic);
-        ESP_LOGI(TAG, "Received data: %.*s", event_data->data_len, event_data->data);
+        ESP_LOGI(__func__, "MQTT_EVENT_DATA");
+        ESP_LOGI(__func__, "Received topic: %.*s", event_data->topic_len, event_data->topic);
+        ESP_LOGI(__func__, "Received data: %.*s", event_data->data_len, event_data->data);
 
         // Check if the received message is a snap command
         if (strncmp(event_data->topic, "/camera/cmd", event_data->topic_len) == 0) {
             if (strncmp(event_data->data, "snap", event_data->data_len) == 0) {
-                ESP_LOGI(TAG, "snap command received");
+                ESP_LOGI(__func__, "snap command received");
                 xQueueSend(camera_evt_queue, &cmd, 0);
             }
         }
     });
 
-    ESP_LOGI(TAG, "mqtt client initialized");
+    ESP_LOGI(__func__, "mqtt client initialized");
 }
 
 void base64_encode(const uint8_t *input, size_t input_len, char *output, size_t output_len) {
