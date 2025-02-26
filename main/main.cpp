@@ -1,48 +1,43 @@
+#include <cstdint>
+#include <cstring>
+#include <cstdio>
+
+// ESP-IDF
 #include <esp_system.h>
 #include <esp_log.h>
-#include <nvs_flash.h>
+#include <esp_heap_caps.h>
+
+// FreeRTOS
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
-#include "driver/gpio.h"
-#include "esp_heap_caps.h"
-//#include <inttypes.h> // For PRIu32
-#include <string.h>
-#include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
-#include "tensorflow/lite/micro/micro_interpreter.h"
-#include "tensorflow/lite/micro/system_setup.h"
-#include "tensorflow/lite/schema/schema_generated.h"
-#include "tensorflow/lite/core/c/common.h"
-#include "tensorflow/lite/micro/micro_log.h"
 
-//#include "esp_event.h"
-//#include "esp_netif.h"
-//#include "esp_http_client.h"
+// ESP-IDF components
+#include <driver/gpio.h>
+#include <mbedtls/base64.h>
+#include <nvs.h> //non volatile storage important for saving data while code runs
+#include <nvs_flash.h>
 
+// ESP managed components
+#include <tensorflow/lite/core/c/common.h>
+#include <tensorflow/lite/micro/micro_interpreter.h>
+#include <tensorflow/lite/micro/micro_log.h>
+#include <tensorflow/lite/micro/micro_mutable_op_resolver.h>
+#include <tensorflow/lite/micro/system_setup.h>
+#include <tensorflow/lite/schema/schema_generated.h>
 
-//#include "mqtt_client.h"
+// Local components
+#include <camera_ctl.h>
+#include <sd_card.h>
+#include <MQTTClient.hpp>
+#include <WiFiStation.hpp>
+
+// Application configuration
 #include "private_data.h"
-#include "sd_card.h"
-
-
-#include <stdint.h>//lib for ints i-e int8_t upto 1int64_t
-#include <string.h> //for string data i-e char array
-#include <stdbool.h> //for boolean data type
-#include <stdio.h> // macros,input output, files etc
-#include "nvs.h" //non volatile storage important for saving data while code runs
-#include "nvs_flash.h" // storing in nvs flash memory
-#include "freertos/FreeRTOS.h" //freertos for realtime opertaitons
-#include "freertos/task.h" // creating a task handler and assigning priority
-
-#include "mbedtls/base64.h"
-
-#include "camera_ctl.h"
-#include "WiFiStation.hpp" //wifi station class                                  
-#include "MQTTClient.hpp" //mqtt client class
 
 WiFiStation wifi(SSID, PASSWORD); //wifi object with ssid and password
 MQTTClient mqtt(MQTT_URI); //mqtt object with broker uri
-CameraCtl cam; 
+CameraCtl cam;
 
 static constexpr const char* TAG = "CAMERA";
 
@@ -50,12 +45,12 @@ static constexpr const char* TAG = "CAMERA";
 QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
 
 //This macro explicitly places the variable in external PSRAM.
-uint8_t  *img_buffer; 
+uint8_t  *img_buffer;
 void save_cam_image(char *fname, camera_fb_t *pic, uint8_t *img_buffer);
 
 
 char  *b64_buffer; //buffer for base64 encoding
-void base64_encode(const uint8_t *input, size_t input_len, char *output, size_t output_len); 
+void base64_encode(const uint8_t *input, size_t input_len, char *output, size_t output_len);
 
 //static esp_mqtt_client_handle_t mqtt_client = NULL; // Global MQTT client handle
 
@@ -78,7 +73,7 @@ extern "C" void app_main()
       printf("failed to allocate memory in psram\n");
       return;
     }
-  
+
     // Calculate the required output buffer size for Base64 encoding
     b64_size = (4 * ((image_size + 2) / 3)) + 1;  // +1 for the null terminator
 
@@ -143,7 +138,7 @@ extern "C" void app_main()
 
 void camera_task(void *p)
 {
-    
+
     char photo_name[50];
     unsigned int i = 0;
     uint8_t cmd;
@@ -158,13 +153,13 @@ void camera_task(void *p)
             //vTaskDelay(2500 / portTICK_PERIOD_MS);
             //gpio_set_level(GPIO_NUM_33, 0);
             //vTaskDelay(2500 / portTICK_PERIOD_MS);
-            
+
             //sprintf(photo_name, "/sdcard/pic_%u.ppm", i++);
             cam.capture();
 
             //convert image to base64
             base64_encode(cam.pic->buf, cam.pic->len, b64_buffer, b64_size);
-            
+
             //publish encoded image
             mqtt.publish("/camera/img", b64_buffer, 2, 0);
             ESP_LOGI(TAG, "image sent");
