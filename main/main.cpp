@@ -86,9 +86,7 @@ extern "C" void app_main()
 
     // WiFi
     wifi.init();
-    wifi.register_event_callback( IP_EVENT, IP_EVENT_STA_GOT_IP, [](auto event_data) {
-        auto event = static_cast<ip_event_got_ip_t*>(event_data);
-        ESP_LOGI(__func__, "wifi connected with IP: " IPSTR, IP2STR(&event->ip_info.ip));
+    wifi.register_event_callback(IP_EVENT, IP_EVENT_STA_GOT_IP, [](auto _) {
         start_mqtt_client();
     });
 
