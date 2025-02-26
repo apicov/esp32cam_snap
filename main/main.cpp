@@ -37,28 +37,21 @@
 
 static const char* TAG = "APP_MAIN";
 
-WiFiStation wifi(SSID, PASSWORD); //wifi object with ssid and password
-MQTTClient mqtt(MQTT_URI); //mqtt object with broker uri
-CameraCtl cam;
-
-QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
-
-//This macro explicitly places the variable in external PSRAM.
-uint8_t  *img_buffer;
-void save_cam_image(char *fname, camera_fb_t *pic, uint8_t *img_buffer);
-
-
-char  *b64_buffer; //buffer for base64 encoding
-void base64_encode(const uint8_t *input, size_t input_len, char *output, size_t output_len);
-
-//static esp_mqtt_client_handle_t mqtt_client = NULL; // Global MQTT client handle
-
-
+/* prototypes */
 void camera_task(void *p);
 void mqtt_task(void *p);
-
 void start_mqtt_client();
+void save_cam_image(char *fname, camera_fb_t *pic, uint8_t *img_buffer);
+void base64_encode(const uint8_t *in, size_t in_len, char *out, size_t out_len);
 
+/* globals */
+WiFiStation wifi(SSID, PASSWORD); //wifi object with ssid and password
+MQTTClient mqtt(MQTT_URI); //mqtt object with broker uri
+
+CameraCtl cam;
+QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
+uint8_t  *img_buffer;
+char  *b64_buffer; //buffer for base64 encoding
 size_t b64_size;
 
 extern "C" void app_main()
