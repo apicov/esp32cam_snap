@@ -48,7 +48,6 @@ MQTTClient mqtt(MQTT_URI); //mqtt object with broker uri
 
 CameraCtl cam;
 QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
-uint8_t  *img_buffer;
 
 char  *b64_buffer; //buffer for base64 encoding
 size_t b64_size;
@@ -57,19 +56,14 @@ extern "C" void app_main()
 {
     ESP_LOGI(TAG, "application started");
 
+    // TODO: if the image resolution can be adjusted, then it might be
+    // a good idea to make the dimensions configurable
     size_t image_size = 160 * 120 * 3;
-
-    // Allocate for color image (RGB) in external ram
-    img_buffer = (uint8_t*)heap_caps_malloc(image_size, MALLOC_CAP_SPIRAM);
-    if (img_buffer == NULL) {
-      printf("failed to allocate memory in psram\n");
-      return;
-    }
 
     // Calculate the required output buffer size for Base64 encoding
     b64_size = (4 * ((image_size + 2) / 3)) + 1;  // +1 for the null terminator
 
-    // Allocate base64_encode  in external ram
+    // Allocate base64_encode in external ram
     b64_buffer = (char*)heap_caps_malloc(b64_size, MALLOC_CAP_SPIRAM);
     if ( b64_buffer == NULL) {
         printf("Failed to allocate memory in PSRAM\n");
