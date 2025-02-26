@@ -35,12 +35,11 @@
 // Application configuration
 #include "private_data.h"
 
+static const char* TAG = "APP_MAIN";
+
 WiFiStation wifi(SSID, PASSWORD); //wifi object with ssid and password
 MQTTClient mqtt(MQTT_URI); //mqtt object with broker uri
 CameraCtl cam;
-
-static constexpr const char* TAG = "CAMERA";
-
 
 QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
 
