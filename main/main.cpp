@@ -37,7 +37,7 @@
 void camera_task(void *p);
 void mqtt_task(void *p);
 void start_mqtt_client();
-void base64_encode(const uint8_t *in, size_t in_len, char *out, size_t out_len);
+void maybe_send_image();
 
 /* globals */
 WiFiStation wifi(SSID, PASSWORD);
@@ -63,13 +63,12 @@ extern "C" void app_main()
     // Allocate base64_encode in external ram
     // TODO: does it have to be in external RAM?
     b64_buffer = (char*)heap_caps_malloc(b64_size, MALLOC_CAP_SPIRAM);
-    if ( b64_buffer == NULL) {
+    if (b64_buffer == NULL) {
         ESP_LOGE(__func__, "Failed to allocate memory in PSRAM");
         return;
     }
 
     // initialize components ...
-
     // gpio
     gpio_set_direction(GPIO_NUM_33, GPIO_MODE_OUTPUT);
 
@@ -112,15 +111,11 @@ void camera_task(void *p)
         if(mqtt.is_connected()){
             gpio_set_level(GPIO_NUM_33, 0);
 
+            // TODO: the following three steps should be grouped into
+            // a single method in the CameraCtl class that takes a lambda
+            // which explains what action to take on_capture
             cam.capture();
-
-            //convert image to base64
-            base64_encode(cam.pic->buf, cam.pic->len, b64_buffer, b64_size);
-
-            //publish encoded image
-            mqtt.publish("/camera/img", b64_buffer, 2, 0);
-            ESP_LOGI(__func__, "image sent");
-
+            maybe_send_image();
             cam.free_buffer();
 
             gpio_set_level(GPIO_NUM_33, 1);
@@ -161,9 +156,18 @@ void start_mqtt_client(){
     ESP_LOGI(__func__, "mqtt client initialized");
 }
 
-void base64_encode(const uint8_t *input, size_t input_len, char *output, size_t output_len) {
-    size_t olen = 0;
-    int ret = mbedtls_base64_encode((unsigned char *)output, output_len, &olen, input, input_len);
-    if (ret != 0) {
-        ESP_LOGE("BASE64", "Base64 encoding failed with error code: %d", ret);
-    } }
+void maybe_send_image() {
+    auto src = cam.pic->buf;
+    auto slen = cam.pic->len;
+    size_t olen;
+
+    auto ret = mbedtls_base64_encode((unsigned char *) b64_buffer, b64_size, &olen, src, slen);
+    if (ret == 0) {
+      mqtt.publish("/camera/img", b64_buffer, 2, 0);
+      ESP_LOGI(__func__, "image sent");
+      return;
+    }
+
+    ESP_LOGE("__func__", "the dest buffer is too small (%zu)"
+             ", it requires a length of %zu", b64_size, olen);
+}
