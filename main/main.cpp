@@ -28,7 +28,6 @@
 
 // Local components
 #include <camera_ctl.h>
-#include <sd_card.h>
 #include <MQTTClient.hpp>
 #include <WiFiStation.hpp>
 
@@ -77,7 +76,6 @@ extern "C" void app_main()
         return;
     }
 
-
     gpio_set_direction(GPIO_NUM_33, GPIO_MODE_OUTPUT);
 
     camera_evt_queue = xQueueCreate(10, sizeof(uint8_t));
@@ -90,12 +88,6 @@ extern "C" void app_main()
     }
     ESP_ERROR_CHECK(ret);
 
-    sdmmc_card_t *card;
-    ret = initi_sd_card("/sdcard", &card);
-    if (ret != ESP_OK) {
-        ESP_LOGE("SD_CARD", "initialization failed: %s", esp_err_to_name(ret));
-        return;
-    }
 
     ret = cam.init_camera();
     if (ret != ESP_OK)
