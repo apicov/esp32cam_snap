@@ -41,7 +41,6 @@ static const char* TAG = "APP_MAIN";
 void camera_task(void *p);
 void mqtt_task(void *p);
 void start_mqtt_client();
-void save_cam_image(char *fname, camera_fb_t *pic, uint8_t *img_buffer);
 void base64_encode(const uint8_t *in, size_t in_len, char *out, size_t out_len);
 
 /* globals */
@@ -60,6 +59,7 @@ extern "C" void app_main()
     ESP_LOGI(TAG, "application started");
 
     size_t image_size = 160 * 120 * 3;
+
     // Allocate for color image (RGB) in external ram
     img_buffer = (uint8_t*)heap_caps_malloc(image_size, MALLOC_CAP_SPIRAM);
     if (img_buffer == NULL) {
@@ -123,9 +123,6 @@ extern "C" void app_main()
 
 void camera_task(void *p)
 {
-
-    char photo_name[50];
-    unsigned int i = 0;
     uint8_t cmd;
 
     while(1)
@@ -136,7 +133,6 @@ void camera_task(void *p)
         if(mqtt.is_connected()){
             gpio_set_level(GPIO_NUM_33, 0);
 
-            //sprintf(photo_name, "/sdcard/pic_%u.ppm", i++);
             cam.capture();
 
             //convert image to base64
@@ -146,7 +142,6 @@ void camera_task(void *p)
             mqtt.publish("/camera/img", b64_buffer, 2, 0);
             ESP_LOGI(TAG, "image sent");
 
-            //save_cam_image(photo_name, cam.pic, img_buffer);
             cam.free_buffer();
 
             gpio_set_level(GPIO_NUM_33, 1);
@@ -186,16 +181,6 @@ void start_mqtt_client(){
 
     ESP_LOGI(TAG, "mqtt client initialized");
 }
-
-void save_cam_image(char *fname, camera_fb_t *pic, uint8_t *img_buffer) {
-
-    if (pic->format == PIXFORMAT_JPEG) {
-        fmt2rgb888(pic->buf, pic->len, PIXFORMAT_JPEG, img_buffer);
-        resizeColorImage(img_buffer, 160, 120, img_buffer, 96, 96);
-        saveAsPPM(fname, img_buffer, 96, 96);
-    }
-}
-
 
 void base64_encode(const uint8_t *input, size_t input_len, char *output, size_t output_len) {
     size_t olen = 0;
