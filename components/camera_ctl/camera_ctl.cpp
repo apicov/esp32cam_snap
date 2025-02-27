@@ -1,6 +1,11 @@
-#include "camera_ctl.h"
-
+// ESP
+#include <esp_log.h>
 #include <esp_check.h>
+
+// ESP-IDF
+#include <driver/i2c.h>
+
+#include "camera_ctl.h"
 
 esp_err_t CameraCtl::init_camera(void)
 {
