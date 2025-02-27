@@ -57,11 +57,12 @@ esp_err_t CameraCtl::camera_xclk_init(uint32_t freq_hz) {
 
     // Configure the LEDC timer
     ledc_timer_config_t ledc_timer = {
-        .speed_mode = LEDC_HIGH_SPEED_MODE, // High-speed mode
+        .speed_mode = LEDC_HIGH_SPEED_MODE,  // High-speed mode
         .duty_resolution = LEDC_TIMER_1_BIT, // Minimal duty resolution for clock
-        .timer_num = LEDC_TIMER_0,         // Use LEDC_TIMER_0
-        .freq_hz = freq_hz,                // Set the desired frequency
-        .clk_cfg = LEDC_AUTO_CLK           // Automatically select clock source
+        .timer_num = LEDC_TIMER_0,           // Use LEDC_TIMER_0
+        .freq_hz = freq_hz,                  // Set the desired frequency
+        .clk_cfg = LEDC_AUTO_CLK,            // Automatically select clock source
+        .deconfigure = 0,
     };
     ESP_RETURN_ON_ERROR(ledc_timer_config(&ledc_timer), TAG, "ledc_timer");
 
@@ -70,9 +71,12 @@ esp_err_t CameraCtl::camera_xclk_init(uint32_t freq_hz) {
         .gpio_num = CAM_PIN_XCLK, // Replace with your XCLK GPIO number
         .speed_mode = LEDC_HIGH_SPEED_MODE,
         .channel = LEDC_CHANNEL_0,
+        .intr_type = LEDC_INTR_DISABLE,               // TODO: default
         .timer_sel = LEDC_TIMER_0,
         .duty = 1, // Minimal duty cycle for clock generation
-        .hpoint = 0
+        .hpoint = 0,
+        .sleep_mode = LEDC_SLEEP_MODE_NO_ALIVE_NO_PD, // TODO: default
+        .flags = { .output_invert = 1 },              // TODO: default
     };
     ESP_RETURN_ON_ERROR(ledc_channel_config(&ledc_channel), TAG, "ledc_channel");
 
