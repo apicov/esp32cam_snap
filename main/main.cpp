@@ -109,12 +109,23 @@ void camera_task(void *p)
         if(mqtt.is_connected()){
             gpio_set_level(GPIO_NUM_33, 0);
 
-            // TODO: the following three steps should be grouped into
-            // a single method in the CameraCtl class that takes a lambda
-            // which explains what action to take on_capture
-            cam.capture();
-            maybe_send_image();
-            cam.free_buffer();
+            cam.capture_do([](const auto pic){
+                auto src = pic->buf;
+                auto slen = pic->len;
+                size_t olen;
+
+                auto ret = mbedtls_base64_encode(
+                  (unsigned char *) b64_buffer, b64_size, &olen, src, slen);
+
+                if (ret == 0) {
+                  mqtt.publish("/camera/img", b64_buffer, 2, 0);
+                  ESP_LOGI(__func__, "image sent");
+                }
+                else {
+                  ESP_LOGE(__func__, "the dest buffer is too small (%zu)"
+                           ", it requires a length of %zu", b64_size, olen);
+                }
+            });
 
             gpio_set_level(GPIO_NUM_33, 1);
             vTaskDelay(5000 / portTICK_PERIOD_MS);
@@ -152,20 +163,4 @@ void start_mqtt_client(){
     });
 
     ESP_LOGI(__func__, "mqtt client initialized");
-}
-
-void maybe_send_image() {
-    auto src = cam.pic->buf;
-    auto slen = cam.pic->len;
-    size_t olen;
-
-    auto ret = mbedtls_base64_encode((unsigned char *) b64_buffer, b64_size, &olen, src, slen);
-    if (ret == 0) {
-      mqtt.publish("/camera/img", b64_buffer, 2, 0);
-      ESP_LOGI(__func__, "image sent");
-      return;
-    }
-
-    ESP_LOGE("__func__", "the dest buffer is too small (%zu)"
-             ", it requires a length of %zu", b64_size, olen);
 }
