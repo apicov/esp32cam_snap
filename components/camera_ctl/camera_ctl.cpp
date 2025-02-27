@@ -1,11 +1,13 @@
 #include "camera_ctl.h"
 
+#include <esp_check.h>
+
 //uint8_t img[96*96];
 //uint8_t img_color[96 * 96 * 3]; // Allocate for color image (RGB)
 
 esp_err_t CameraCtl::init_camera(void)
 {
-    camera_config_t camera_config = {
+    camera_config_t config = {
     CAM_PIN_PWDN,        // pin_pwdn
     CAM_PIN_RESET,       // pin_reset
     CAM_PIN_XCLK,        // pin_xclk
@@ -35,17 +37,8 @@ esp_err_t CameraCtl::init_camera(void)
     };
 
 
-    esp_err_t err = camera_xclk_init(20'000'000);
-    if (err != ESP_OK)
-    {
-        return err;
-    }
-
-    err = esp_camera_init(&camera_config);
-    if (err != ESP_OK)
-    {
-        return err;
-    }
+    ESP_RETURN_ON_ERROR(camera_xclk_init(20'000'000), __func__, "xclk_init");
+    ESP_RETURN_ON_ERROR(esp_camera_init(&config), __func__, "camera_init");
     return ESP_OK;
 }
 
@@ -53,12 +46,9 @@ esp_err_t CameraCtl::init_camera(void)
 void CameraCtl::capture(void)
 {    
     ESP_LOGI(CAM_TAG, "Starting Taking Picture!");
-
     pic = esp_camera_fb_get();
-    
     ESP_LOGI(CAM_TAG, "Finished Taking Picture!");
 }
-
 
 
 void CameraCtl::free_buffer()
@@ -78,11 +68,8 @@ esp_err_t CameraCtl::camera_xclk_init(uint32_t freq_hz) {
     };
 
     // Configure the LEDC timer
-    esp_err_t err = ledc_timer_config(&ledc_timer);
-    if (err != ESP_OK) {
-        ESP_LOGE("camera_xclk", "LEDC timer config failed, rc=%d", err);
-        return err;
-    }
+    ESP_RETURN_ON_ERROR(ledc_timer_config(&ledc_timer), __func__,
+                        "LEDC timer config failed");
 
     // Configure the LEDC channel for XCLK pin
     ledc_channel_config_t ledc_channel = {
@@ -94,11 +81,7 @@ esp_err_t CameraCtl::camera_xclk_init(uint32_t freq_hz) {
         .hpoint = 0
     };
 
-    err = ledc_channel_config(&ledc_channel);
-    if (err != ESP_OK) {
-        ESP_LOGE("camera_xclk", "LEDC channel config failed, rc=%d", err);
-        return err;
-    }
-
+    ESP_RETURN_ON_ERROR(ledc_channel_config(&ledc_channel), __func__,
+                        "LEDC channel config failed");
     return ESP_OK;
 }
