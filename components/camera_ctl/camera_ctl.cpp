@@ -2,9 +2,6 @@
 
 #include <esp_check.h>
 
-//uint8_t img[96*96];
-//uint8_t img_color[96 * 96 * 3]; // Allocate for color image (RGB)
-
 esp_err_t CameraCtl::init_camera(void)
 {
     camera_config_t config = {
@@ -35,7 +32,6 @@ esp_err_t CameraCtl::init_camera(void)
     CAMERA_GRAB_WHEN_EMPTY, // grab_mode
     I2C_NUM_0 // sccb_i2c_port
     };
-
 
     ESP_RETURN_ON_ERROR(camera_xclk_init(20'000'000), __func__, "xclk_init");
     ESP_RETURN_ON_ERROR(esp_camera_init(&config), __func__, "camera_init");
