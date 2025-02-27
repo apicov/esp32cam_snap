@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include <esp_camera.h>
 #include <esp_err.h>
 
@@ -33,7 +35,6 @@
 #define CONFIG_OV3660_SUPPORT 1
 #define CONFIG_OV5640_SUPPORT 1
 
-
 class CameraCtl 
 {  
     public:
@@ -41,6 +42,7 @@ class CameraCtl
         camera_fb_t *pic;
         esp_err_t init_camera(void);
         void capture(void);
+        void capture_do(std::function<void(const camera_fb_t*)>);
         void free_buffer();
     private:
         esp_err_t camera_xclk_init(uint32_t freq_hz);
