@@ -37,18 +37,14 @@
 #define CONFIG_OV5640_SUPPORT 1
 
 
-static const char *CAM_TAG = "cam_ctl"; // Tag for logging
-
-
 class CameraCtl 
 {  
     public:
+        constexpr static const char* TAG = "camera_ctl";
         camera_fb_t *pic;
-
         esp_err_t init_camera(void);
         void capture(void);
         void free_buffer();
     private:
         esp_err_t camera_xclk_init(uint32_t freq_hz);
-
 };

@@ -33,17 +33,17 @@ esp_err_t CameraCtl::init_camera(void)
     I2C_NUM_0 // sccb_i2c_port
     };
 
-    ESP_RETURN_ON_ERROR(camera_xclk_init(20'000'000), __func__, "xclk_init");
-    ESP_RETURN_ON_ERROR(esp_camera_init(&config), __func__, "camera_init");
+    ESP_RETURN_ON_ERROR(camera_xclk_init(20'000'000), TAG, "xclk_init");
+    ESP_RETURN_ON_ERROR(esp_camera_init(&config), TAG, "camera_init");
     return ESP_OK;
 }
 
 
 void CameraCtl::capture(void)
 {    
-    ESP_LOGI(CAM_TAG, "Starting Taking Picture!");
+    ESP_LOGI(TAG, "Starting Taking Picture!");
     pic = esp_camera_fb_get();
-    ESP_LOGI(CAM_TAG, "Finished Taking Picture!");
+    ESP_LOGI(TAG, "Finished Taking Picture!");
 }
 
 
@@ -55,6 +55,7 @@ void CameraCtl::free_buffer()
 
 esp_err_t CameraCtl::camera_xclk_init(uint32_t freq_hz) {
 
+    // Configure the LEDC timer
     ledc_timer_config_t ledc_timer = {
         .speed_mode = LEDC_HIGH_SPEED_MODE, // High-speed mode
         .duty_resolution = LEDC_TIMER_1_BIT, // Minimal duty resolution for clock
@@ -62,10 +63,7 @@ esp_err_t CameraCtl::camera_xclk_init(uint32_t freq_hz) {
         .freq_hz = freq_hz,                // Set the desired frequency
         .clk_cfg = LEDC_AUTO_CLK           // Automatically select clock source
     };
-
-    // Configure the LEDC timer
-    ESP_RETURN_ON_ERROR(ledc_timer_config(&ledc_timer), __func__,
-                        "LEDC timer config failed");
+    ESP_RETURN_ON_ERROR(ledc_timer_config(&ledc_timer), TAG, "ledc_timer");
 
     // Configure the LEDC channel for XCLK pin
     ledc_channel_config_t ledc_channel = {
@@ -76,8 +74,8 @@ esp_err_t CameraCtl::camera_xclk_init(uint32_t freq_hz) {
         .duty = 1, // Minimal duty cycle for clock generation
         .hpoint = 0
     };
+    ESP_RETURN_ON_ERROR(ledc_channel_config(&ledc_channel), TAG, "ledc_channel");
 
-    ESP_RETURN_ON_ERROR(ledc_channel_config(&ledc_channel), __func__,
-                        "LEDC channel config failed");
     return ESP_OK;
 }
+
