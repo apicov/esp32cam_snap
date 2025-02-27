@@ -44,25 +44,13 @@ esp_err_t CameraCtl::init_camera(void)
 }
 
 
-void CameraCtl::capture(void)
-{    
-    ESP_LOGI(TAG, "Starting Taking Picture!");
-    pic = esp_camera_fb_get();
-    ESP_LOGI(TAG, "Finished Taking Picture!");
-}
-
 void CameraCtl::capture_do(std::function<void(const camera_fb_t*)> f)
 {
-    ESP_LOGI(TAG, "Starting Taking Picture!");
+    ESP_LOGI(TAG, "take picture!");
     pic = esp_camera_fb_get();
+    ESP_LOGI(TAG, "apply action on picture");
     f(pic);
-    ESP_LOGI(TAG, "Finished Taking Picture!");
-    esp_camera_fb_return(pic);
-}
-
-
-void CameraCtl::free_buffer()
-{
+    ESP_LOGI(TAG, "release framebuffer");
     esp_camera_fb_return(pic);
 }
 
@@ -96,4 +84,3 @@ esp_err_t CameraCtl::camera_xclk_init(uint32_t freq_hz) {
 
     return ESP_OK;
 }
-
