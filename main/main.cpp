@@ -26,7 +26,7 @@
 #include <tensorflow/lite/schema/schema_generated.h>
 
 // Local components
-#include <camera_ctl.h>
+#include <camera_ctl.hpp>
 #include <MQTTClient.hpp>
 #include <WiFiStation.hpp>
 
