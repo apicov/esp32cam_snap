@@ -1,34 +1,34 @@
 #include "MQTTClient.hpp"
-    
+
 MQTTClient::MQTTClient(const char* mqtt_broker_uri)
   :mqtt_broker_uri_(mqtt_broker_uri){}
-  
+
  void MQTTClient::init(){
 
-  // MQTT configuration                                                                      
+  // MQTT configuration
   esp_mqtt_client_config_t mqtt_cfg = {};
   mqtt_cfg.broker.address.uri = mqtt_broker_uri_;  // Correct URI assignment
-  mqtt_cfg.session.keepalive = 10;  // Set the keep-alive interval 
+  mqtt_cfg.session.keepalive = 10;  // Set the keep-alive interval
 
   ESP_LOGI(TAG, "Initializing MQTT client with URI: %s", mqtt_broker_uri_);
-                                                                                             
-  // Initialize MQTT client                                                                
-  mqtt_client_ = esp_mqtt_client_init(&mqtt_cfg);                                             
+
+  // Initialize MQTT client
+  mqtt_client_ = esp_mqtt_client_init(&mqtt_cfg);
   if (mqtt_client_ == NULL) {
       ESP_LOGE(TAG, "Failed to initialize MQTT client");
       return;
   }
-                                                                                             
-  // Register the event handler                                                              
+
+  // Register the event handler
   esp_mqtt_client_register_event(mqtt_client_, static_cast<esp_mqtt_event_id_t>(ESP_EVENT_ANY_ID), &MQTTClient::event_handler_static, this);
 
   //set default handlers
   set_default_handlers();
-                                                                                             
-  // Start the MQTT client                                                                   
-  esp_mqtt_client_start(mqtt_client_);                                                          
-                                                                                             
-  ESP_LOGI("TAG", "MQTT client initialized and started");                                      
+
+  // Start the MQTT client
+  esp_mqtt_client_start(mqtt_client_);
+
+  ESP_LOGI("TAG", "MQTT client initialized and started");
 }
 
 // Static event handler required by the ESP-IDF
@@ -66,7 +66,7 @@ void MQTTClient::publish(const char* topic, const char* data, int qos, int retai
 
     // Publish the message to the specified topic with the given QoS and retain flag
     int msg_id = esp_mqtt_client_publish(mqtt_client_, topic, data, 0, qos, retain);
-    
+
     // Check if the message was published successfully
     if (msg_id != -1) {
         ESP_LOGI(TAG, "Message published successfully, msg_id=%d", msg_id);
@@ -83,30 +83,27 @@ esp_err_t MQTTClient::subscribe(const char* topic, int qos){
 void MQTTClient::event_handler(esp_mqtt_event_handle_t event_data) {
     auto key = event_data->event_id;
     auto it = event_callbacks_.find(key);
-    
+
     if (it != event_callbacks_.end()) {
         // Call the registered callback for this event
         it->second(event_data);
     } else {
         ESP_LOGW(TAG, "Unhandled event: id=%d", event_data->event_id );
     }
-}  
+}
 
-  
+
 // Set default handlers for MQTT events
 void MQTTClient::set_default_handlers() {
     // Triggered when the client successfully connects to the broker
     register_event_callback(MQTT_EVENT_CONNECTED, [this](esp_mqtt_event_handle_t event_data) {
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-        // Publish a message after connection
-    int msg_id = esp_mqtt_client_publish(
-        mqtt_client_,          // The MQTT client handle obtained from esp_mqtt_client_init
-        "/topic/test",         // The topic to which the message will be published
-        "Hello from ESP32!",   // The message payload to be published
-        0,                     // The length of the message payload; 0 means use strlen(data)
-        1,                     // The Quality of Service level (QoS); 1 means at least once delivery
-        0                      // The retain flag; 0 means the message will not be retained by the broker
-    );
+        // Publish a test message
+        int msg_id = esp_mqtt_client_publish(
+            mqtt_client_, "/topic/test", "Hello from ESP32!",0, 1, 0
+        );
+        if (msg_id < 0)
+            ESP_LOGE(TAG, "Failed to publish in '/topic/test', msg_id=%d", msg_id);
     });
 
     // Triggered when the client disconnects from the broker
@@ -151,4 +148,3 @@ void MQTTClient::set_default_handlers() {
         ESP_LOGI(TAG, "MQTT_EVENT_DELETED");
     });
 }
-
