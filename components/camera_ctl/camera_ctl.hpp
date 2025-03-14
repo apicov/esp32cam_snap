@@ -41,6 +41,10 @@
 class CameraCtl
 {
 public:
+    /**
+     * @brief Tag descriptor of the class, useful for logging.
+     *
+     */
     constexpr static const char* TAG = "camera_ctl";
     /**
      * @brief initialize the camera
