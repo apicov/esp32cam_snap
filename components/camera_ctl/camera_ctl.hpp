@@ -5,10 +5,6 @@
 #include "esp_camera.h"
 #include "esp_err.h"
 
-#define I2C_MASTER_FREQ_HZ 100000        /*!< I2C master clock frequency */
-#define I2C_MASTER_TX_BUF_DISABLE 0      /*!< I2C master doesn't need buffer */
-#define I2C_MASTER_RX_BUF_DISABLE 0
-
 #define CAM_PIN_PWDN    32
 #define CAM_PIN_RESET   -1 //software reset will be performed
 #define CAM_PIN_XCLK    0
