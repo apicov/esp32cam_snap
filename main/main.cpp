@@ -121,12 +121,11 @@ void camera_task(void *p)
                            ", it requires a length of %zu", b64_size, olen);
                 }
             });
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
-        else{
+        else
             ESP_LOGE(__func__, "MQTT not connected");
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-        }
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 
