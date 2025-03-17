@@ -113,12 +113,12 @@ esp_err_t CameraCtl::camera_xclk_init(uint32_t freq_hz) {
 /* ================== */
 CameraCtl::Picture::Picture() : fb{esp_camera_fb_get()}
 {
-    ESP_LOGI(TAG, "Taking a new picture");
+    ESP_LOGI(TAG, "Snapshot taken.");
 }
 
 CameraCtl::Picture::~Picture()
 {
-    ESP_LOGD(TAG, "Release the picture's framebuffer");
+    ESP_LOGD(TAG, "Release the snapshot's framebuffer");
     esp_camera_fb_return(fb);
 }
 
