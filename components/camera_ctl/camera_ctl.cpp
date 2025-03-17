@@ -3,6 +3,7 @@
 #include <esp_check.h>
 
 // ESP-IDF
+#include <driver/gpio.h>
 #include <driver/i2c.h>
 
 #include "camera_ctl.hpp"
@@ -24,7 +25,7 @@
 #define CAM_PIN_VSYNC   25
 #define CAM_PIN_HREF    23
 #define CAM_PIN_PCLK    22
-
+#define CAM_FLASH_LAMP  GPIO_NUM_4
 
 #define CONFIG_XCLK_FREQ 20'000'000
 #define CONFIG_OV2640_SUPPORT 1
@@ -70,13 +71,17 @@ CameraCtl::CameraCtl()
      * but maybe is best to allow the user to do it instead
      */
     ESP_ERROR_CHECK(esp_camera_init(&config));
+    gpio_set_direction(CAM_FLASH_LAMP, GPIO_MODE_OUTPUT);
     ESP_LOGD(TAG, "Camera initialized");
 }
 
 
 void CameraCtl::capture_do(std::function<void(const Picture &)> f)
 {
-    return f(Picture{});
+    gpio_set_level(CAM_FLASH_LAMP, 1);
+    Picture p{};
+    gpio_set_level(CAM_FLASH_LAMP, 0);
+    return f(p);
 }
 
 
