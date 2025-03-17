@@ -70,6 +70,7 @@ CameraCtl::CameraCtl()
      * but maybe is best to allow the user to do it instead
      */
     ESP_ERROR_CHECK(esp_camera_init(&config));
+    ESP_LOGD(TAG, "Camera initialized");
 }
 
 
@@ -113,7 +114,7 @@ esp_err_t CameraCtl::camera_xclk_init(uint32_t freq_hz) {
 /* ================== */
 CameraCtl::Picture::Picture() : fb{esp_camera_fb_get()}
 {
-    ESP_LOGI(TAG, "Snapshot taken.");
+    ESP_LOGI(TAG, "Snapshot taken");
 }
 
 CameraCtl::Picture::~Picture()
