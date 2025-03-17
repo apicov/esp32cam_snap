@@ -16,15 +16,15 @@ public:
      * @brief Tag descriptor of the class, useful for logging.
      *
      */
-    constexpr static const char* TAG = "camera_ctl";
+    static constexpr const char* TAG = "camera_ctl";
+
     /**
-     * @brief initialize the camera
+     * @brief Build a CameraCtl object
      *
-     * @note must be called before using the object
+     * @note It cannot be instantiated before "app_main" is called.
+     *
      */
-    // TODO: it might be better to make call this as part of
-    // the defaul constructor.
-    esp_err_t init_camera(void);
+    CameraCtl();
 
     /**
      * @brief Capture an image and may "do" something with it

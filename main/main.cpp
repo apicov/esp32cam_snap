@@ -43,7 +43,6 @@ void maybe_send_image();
 WiFiStation wifi(SSID, PASSWORD);
 MQTTClient mqtt(MQTT_URI); //MQTT object with broker uri
 
-CameraCtl cam;
 QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
 
 // TODO: if the image resolution can be adjusted, then it might be
@@ -78,9 +77,6 @@ extern "C" void app_main()
     }
     ESP_ERROR_CHECK(ret);
 
-    // camera
-    ESP_ERROR_CHECK(cam.init_camera());
-
     // WiFi
     wifi.init();
     wifi.register_event_callback(IP_EVENT, IP_EVENT_STA_GOT_IP, [](auto _) {
@@ -99,6 +95,7 @@ extern "C" void app_main()
 
 void camera_task(void *p)
 {
+    static CameraCtl cam{};
     uint8_t cmd;
 
     while(1)

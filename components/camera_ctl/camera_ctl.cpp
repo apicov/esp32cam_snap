@@ -32,7 +32,7 @@
 #define CONFIG_OV3660_SUPPORT 1
 #define CONFIG_OV5640_SUPPORT 1
 
-esp_err_t CameraCtl::init_camera(void)
+CameraCtl::CameraCtl()
 {
     camera_config_t config = {
       .pin_pwdn = CAM_PIN_PWDN,
@@ -66,8 +66,10 @@ esp_err_t CameraCtl::init_camera(void)
       .sccb_i2c_port = I2C_NUM_0
     };
 
-    ESP_RETURN_ON_ERROR(esp_camera_init(&config), TAG, "camera_init");
-    return ESP_OK;
+    /* XXX: for now abort if the camera couldn't be initialized,
+     * but maybe is best to allow the user to do it instead
+     */
+    ESP_ERROR_CHECK(esp_camera_init(&config));
 }
 
 
