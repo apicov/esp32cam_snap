@@ -73,14 +73,9 @@ CameraCtl::CameraCtl()
 }
 
 
-void CameraCtl::capture_do(std::function<void(const camera_fb_t*)> f)
+void CameraCtl::capture_do(std::function<void(const Picture &)> f)
 {
-    ESP_LOGI(TAG, "take picture!");
-    pic = esp_camera_fb_get();
-    ESP_LOGI(TAG, "apply action on picture");
-    f(pic);
-    ESP_LOGI(TAG, "release framebuffer");
-    esp_camera_fb_return(pic);
+    return f(Picture{});
 }
 
 
@@ -112,4 +107,27 @@ esp_err_t CameraCtl::camera_xclk_init(uint32_t freq_hz) {
     ESP_RETURN_ON_ERROR(ledc_channel_config(&ledc_channel), TAG, "ledc_channel");
 
     return ESP_OK;
+}
+
+/* CameraCtl::Picture */
+/* ================== */
+CameraCtl::Picture::Picture() : fb{esp_camera_fb_get()}
+{
+    ESP_LOGI(TAG, "Taking a new picture");
+}
+
+CameraCtl::Picture::~Picture()
+{
+    ESP_LOGD(TAG, "Release the picture's framebuffer");
+    esp_camera_fb_return(fb);
+}
+
+const uint8_t *CameraCtl::Picture::image() const
+{
+    return fb->buf;
+}
+
+size_t CameraCtl::Picture::size() const
+{
+    return fb->len;
 }

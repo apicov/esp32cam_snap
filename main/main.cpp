@@ -104,9 +104,9 @@ void camera_task(void *p)
         xQueueReceive(camera_evt_queue, &cmd, portMAX_DELAY);
 
         if(mqtt.is_connected()){
-            cam.capture_do([](const auto pic){
-                auto src = pic->buf;
-                auto slen = pic->len;
+            cam.capture_do([](const auto &pic){
+                auto src = pic.image();
+                auto slen = pic.size();
                 size_t olen;
 
                 auto ret = mbedtls_base64_encode(
