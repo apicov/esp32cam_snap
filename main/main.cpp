@@ -104,8 +104,6 @@ void camera_task(void *p)
         xQueueReceive(camera_evt_queue, &cmd, portMAX_DELAY);
 
         if(mqtt.is_connected()){
-            gpio_set_level(GPIO_NUM_33, 0);
-
             cam.capture_do([](const auto pic){
                 auto src = pic->buf;
                 auto slen = pic->len;
@@ -123,8 +121,6 @@ void camera_task(void *p)
                            ", it requires a length of %zu", b64_size, olen);
                 }
             });
-
-            gpio_set_level(GPIO_NUM_33, 1);
             vTaskDelay(5000 / portTICK_PERIOD_MS);
         }
         else{
