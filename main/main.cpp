@@ -95,7 +95,7 @@ extern "C" void app_main()
 
 void camera_task(void *p)
 {
-    static CameraCtl cam{};
+    CameraCtl cam{};
     uint8_t cmd;
 
     while(1)
