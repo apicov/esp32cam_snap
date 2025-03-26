@@ -71,9 +71,9 @@ public:
      * @param event_id The identifier of the event to register the handler for.
      * @param callback The callback function to register for the given event.
      *
-     * @note This method is currently complex; consider simplifying it
-     *       if only a connection event callback is needed.
      */
+    //TODO: This method is currently complex; consider simplifying it
+    //       if only a connection event callback is needed.
     void register_event_callback(esp_event_base_t event_base, int32_t event_id, WifiEventCallback callback);
 
     /**

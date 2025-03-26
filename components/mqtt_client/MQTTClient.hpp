@@ -32,17 +32,6 @@ public:
     MQTTClient(const char* uri);
 
     /**
-     * @brief Initializes the client instance.
-     *
-     * This method must be called before using the MQTTClient object
-     * to set up the necessary configurations and event handlers.
-     *
-     */
-    // TODO: it might be a better idea to call this inside the default constructor
-    // and not relying on the user to call it
-    void init();
-
-    /**
      * @brief Register a callback for a given event.
      *
      * This method allows the user to register a callback function
@@ -107,6 +96,15 @@ private:
     std::unordered_map<int32_t, MQTTEventCallback> event_callbacks_; ///< Map of registered event callbacks.
     const char* mqtt_broker_uri_; ///< URI of the MQTT broker.
     static constexpr const char* TAG = "MQTTCLIENT"; ///< Log tag for MQTT operations.
+
+    /**
+     * @brief Initializes the client instance.
+     *
+     * This method must be called before using the MQTTClient object
+     * to set up the necessary configurations and event handlers.
+     *
+     */
+    void init();
 
     /**
      * @brief Static event handler required by the ESP-IDF.

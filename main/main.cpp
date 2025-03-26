@@ -130,9 +130,6 @@ void camera_task(void *p)
 }
 
 void start_mqtt_client(){
-    //initialize mqtt client
-    mqtt.init();
-
     mqtt.register_event_callback(MQTT_EVENT_CONNECTED, [](auto event_data) {
         ESP_LOGI(__func__, "MQTT_connected");
         mqtt.subscribe("/camera/cmd", 0);
