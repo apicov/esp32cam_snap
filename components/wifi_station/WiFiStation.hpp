@@ -107,4 +107,10 @@ private:
      * @param event_data Pointer to the event data.
      */
     static void event_handler_static(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
+
+    // Instance-level event handler
+    void event_handler(esp_event_base_t event_base, int32_t event_id, void* event_data);
+
+    // Set default handlers for Wi-Fi and IP events
+    void set_default_handlers();
 };
