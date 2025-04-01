@@ -17,14 +17,6 @@
 #include <nvs.h> //non volatile storage important for saving data while code runs
 #include <nvs_flash.h>
 
-// ESP managed components
-#include <tensorflow/lite/core/c/common.h>
-#include <tensorflow/lite/micro/micro_interpreter.h>
-#include <tensorflow/lite/micro/micro_log.h>
-#include <tensorflow/lite/micro/micro_mutable_op_resolver.h>
-#include <tensorflow/lite/micro/system_setup.h>
-#include <tensorflow/lite/schema/schema_generated.h>
-
 // Local components
 #include <camera_ctl.hpp>
 #include <MQTTClient.hpp>
