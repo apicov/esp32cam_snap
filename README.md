@@ -1,11 +1,14 @@
 # Build the project
 
-With IDF it should be straightforward to build the project, flash it and monitor this application:
+To build the project for the first time, then it needs to be configured
+before building it. Run the following script to configure the project:
+```sh
+# run only once to configure the project
+python configure_app.py
+```
 
+Once the project is configured, it's possible run build, flash and monitor it:
   ```sh
-  # run only once to configure the project
-  python configure_app.py
-
   # build it
   idf.py build
   idf.py flash monitor
