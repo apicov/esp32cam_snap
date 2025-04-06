@@ -14,16 +14,16 @@ def header_string():
     the project. The returned string has the format for a header file
     '''
     ssid, passwd, uri = [
-	input(f'Enter {s}: ') for s in [
-	    'WIFI SSID',
-	    'WIFI Password',
-	    'MQTT broker URI'
-	]
+        input(f'Enter {s}: ') for s in [
+        'WIFI SSID',
+        'WIFI Password',
+        'MQTT broker URI'
+        ]
     ]
 
     uri = uri.lower().replace('mqtt://','').split(':')
     host, port = uri if len(uri) > 1 \
-	else [uri[0], input('Enter the MQTT port: ')]
+        else [uri[0], input('Enter the MQTT port: ')]
 
     return f'''
 #ifndef APP_CONFIGURATION_H
@@ -48,8 +48,8 @@ def run():
 if __name__ == '__main__':
     run()
 else:
-    # tests: run them with:
-    # =====================
+    # run test with:
+    #
     # python -c 'import confiure_app'
     #
 
