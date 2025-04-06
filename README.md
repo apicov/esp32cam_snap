@@ -3,8 +3,10 @@
 With IDF it should be straightforward to build the project, flash it and monitor this application:
 
   ```sh
+  # run only once to configure the project
   python configure_app.py
 
+  # build it
   idf.py build
   idf.py flash monitor
   ```
