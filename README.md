@@ -3,6 +3,8 @@
 With IDF it should be straightforward to build the project, flash it and monitor this application:
 
   ```sh
+  python configure_app.py
+
   idf.py build
   idf.py flash monitor
   ```
@@ -21,4 +23,3 @@ locally installed. The documentation can be generated with the following command
  ```
 
 The documentation in HTML format is stored in the `html` folder.
-
