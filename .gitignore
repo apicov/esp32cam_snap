@@ -8,4 +8,5 @@ components/*
 !components/wifi_station
 managed_components
 private_data.h
+main/app_configuration.h
 sdkconfig.esp32dev.old

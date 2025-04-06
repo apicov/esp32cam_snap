@@ -22,8 +22,8 @@
 #include <MQTTClient.hpp>
 #include <WiFiStation.hpp>
 
-// Application configuration
-#include "private_data.h"
+
+#include "app_configuration.h"
 
 /* prototypes */
 void camera_task(void *p);
