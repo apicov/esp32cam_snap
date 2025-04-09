@@ -73,17 +73,6 @@ private:
     esp_event_handler_instance_t instance_any_id_; ///< Event handler instance for any event.
     esp_event_handler_instance_t instance_ip_event_; ///< Event handler instance for IP events.
 
-    struct pair_hash {
-        /**
-         * this class is used for registering the "event_callbacks_"
-         */
-        template <class T1, class T2>
-        std::size_t operator()(const std::pair<T1, T2>& pair) const {
-            return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
-        }
-    };
-    std::unordered_map<std::pair<esp_event_base_t, int32_t>, WifiEventCallback, pair_hash> event_callbacks_; ///< Map of registered event callbacks.
-
     /**
      * @brief Static event handler required by the ESP-IDF.
      *
@@ -102,4 +91,15 @@ private:
 
     // Set default handlers for Wi-Fi and IP events
     void set_default_handlers();
+
+    /**
+     * this class is used for registering the "event_callbacks_"
+     */
+    struct pair_hash {
+        template <class T1, class T2>
+        std::size_t operator()(const std::pair<T1, T2>& pair) const {
+            return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
+        }
+    };
+    std::unordered_map<std::pair<esp_event_base_t, int32_t>, WifiEventCallback, pair_hash> event_callbacks_; ///< Map of registered event callbacks.
 };
