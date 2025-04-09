@@ -7,26 +7,6 @@
 #include "esp_log.h"
 #include <string.h>
 
-// Hash function for std::pair
-// TODO: this should be private enclosed within WiFiStation
-struct pair_hash {
-    /**
-     * @brief Hash function for a pair of values.
-     *
-     * This function computes a hash value for a given std::pair
-     * by combining the hash values of its two elements.
-     *
-     * @tparam T1 Type of the first element in the pair.
-     * @tparam T2 Type of the second element in the pair.
-     * @param pair The pair for which to compute the hash.
-     * @return The computed hash value.
-     */
-    template <class T1, class T2>
-    std::size_t operator()(const std::pair<T1, T2>& pair) const {
-        return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
-    }
-};
-
 /**
  * @brief A thin wrapper around the ESP-IDF "esp_wifi" for quick use.
  *
@@ -86,14 +66,23 @@ public:
     bool is_connected() const;
 
 private:
+    static constexpr const char* TAG = "WIFI"; ///< Log tag for WiFi operations.
     const char* ssid_; ///< The SSID of the WiFi network.
     const char* password_; ///< The password for the WiFi network.
     std::atomic<bool> is_connected_; ///< Atomic flag indicating connection status.
     esp_event_handler_instance_t instance_any_id_; ///< Event handler instance for any event.
     esp_event_handler_instance_t instance_ip_event_; ///< Event handler instance for IP events.
-    std::unordered_map<std::pair<esp_event_base_t, int32_t>, WifiEventCallback, pair_hash> event_callbacks_; ///< Map of registered event callbacks.
 
-    static constexpr const char* TAG = "WIFI"; ///< Log tag for WiFi operations.
+    struct pair_hash {
+        /**
+         * this class is used for registering the "event_callbacks_"
+         */
+        template <class T1, class T2>
+        std::size_t operator()(const std::pair<T1, T2>& pair) const {
+            return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
+        }
+    };
+    std::unordered_map<std::pair<esp_event_base_t, int32_t>, WifiEventCallback, pair_hash> event_callbacks_; ///< Map of registered event callbacks.
 
     /**
      * @brief Static event handler required by the ESP-IDF.
