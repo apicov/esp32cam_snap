@@ -1,6 +1,8 @@
 #pragma once
 #include <atomic>
 #include <functional>
+#include <vector>
+
 #include <unordered_map>
 #include "esp_event.h"
 #include "esp_wifi.h"
@@ -42,19 +44,12 @@ public:
     void init();
 
     /**
-     * @brief Register a callback for a specific WiFi event.
+     * @brief Register a callback on a connection event.
      *
-     * This method allows the user to register a callback function
-     * that will be invoked when the specified event occurs.
-     *
-     * @param event_base The base ID of the event to register the handler for.
-     * @param event_id The identifier of the event to register the handler for.
-     * @param callback The callback function to register for the given event.
+     * @param The callback to execute.
      *
      */
-    //TODO: This method is currently complex; consider simplifying it
-    //       if only a connection event callback is needed.
-    void register_event_callback(esp_event_base_t event_base, int32_t event_id, WifiEventCallback callback);
+    void on_connect(WifiEventCallback);
 
     /**
      * @brief Check if the WiFi is connected.
@@ -70,18 +65,9 @@ private:
     const char* ssid_; ///< The SSID of the WiFi network.
     const char* password_; ///< The password for the WiFi network.
     std::atomic<bool> is_connected_; ///< Atomic flag indicating connection status.
+    std::vector<WifiEventCallback> on_connect_cb;
+
 
     static void event_handler(void* , esp_event_base_t, int32_t, void*);
     void handle(esp_event_base_t event_base, int32_t event_id, void* event_data);
-
-    /**
-     * this class is used for registering the "event_callbacks_"
-     */
-    struct pair_hash {
-        template <class T1, class T2>
-        std::size_t operator()(const std::pair<T1, T2>& pair) const {
-            return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
-        }
-    };
-    std::unordered_map<std::pair<esp_event_base_t, int32_t>, WifiEventCallback, pair_hash> event_callbacks_; ///< Map of registered event callbacks.
 };

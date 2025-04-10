@@ -71,9 +71,7 @@ extern "C" void app_main()
 
     // WiFi
     wifi.init();
-    wifi.register_event_callback(IP_EVENT, IP_EVENT_STA_GOT_IP, [](auto _) {
-        start_mqtt_client();
-    });
+    wifi.on_connect([](auto _){ start_mqtt_client(); });
 
     // queues
     camera_evt_queue = xQueueCreate(10, sizeof(uint8_t));

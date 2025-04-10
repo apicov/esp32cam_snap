@@ -1,7 +1,10 @@
 #include "WiFiStation.hpp"
 
 WiFiStation::WiFiStation(const char* ssid, const char* password)
-    : ssid_(ssid), password_(password), is_connected_(false) {}
+    : ssid_{ssid}
+    , password_{password}
+    , is_connected_{false}
+    , on_connect_cb{} { }
 
 void WiFiStation::init() {
     // Initialize the TCP/IP stack
@@ -41,8 +44,8 @@ void WiFiStation::init() {
 
 }
 
-void WiFiStation::register_event_callback(esp_event_base_t event_base, int32_t event_id, WifiEventCallback callback) {
-    event_callbacks_[{event_base, event_id}] = std::move(callback);
+void WiFiStation::on_connect(WifiEventCallback f) {
+    on_connect_cb.push_back(std::move(f));
 }
 
 bool WiFiStation::is_connected() const {
@@ -57,7 +60,7 @@ void WiFiStation::event_handler(void* this_, esp_event_base_t event_base, int32_
 // Instance-level event handler
 void WiFiStation::handle(esp_event_base_t base, int32_t id, void* data) {
 
-    bool handled{true};
+    ESP_LOGI(TAG, "Received event: base=%s, id=%d", base, id);
 
     // default handlers
     if (base == WIFI_EVENT) {
@@ -72,22 +75,15 @@ void WiFiStation::handle(esp_event_base_t base, int32_t id, void* data) {
             esp_wifi_connect();
             break;
         }
-    } else if(base == IP_EVENT) {
-        switch(id) {
-        case IP_EVENT_STA_GOT_IP:
+    } else if((base == IP_EVENT) && (id == IP_EVENT_STA_GOT_IP)) {
             is_connected_.store(true);
+
             auto* event = static_cast<ip_event_got_ip_t*>(data);
             ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
-            break;
-        }
-    } else handled = false;
 
-    // attend user handlers
-    auto it = event_callbacks_.find(std::make_pair(base, id));
-    if (it != event_callbacks_.end()) {
-        // Call the registered callback for this event
-        it->second(data);
-    } else if (!handled) {
-        ESP_LOGW(TAG, "Unhandled event: base=%s, id=%d", base, id);
-    }
+            for (const auto &f: this->on_connect_cb) {
+                ESP_LOGD(TAG, "Executing user handlers");
+                f(data);
+            }
+    } else ESP_LOGW(TAG, "Unhandled event: base=%s, id=%d", base, id);
 }
