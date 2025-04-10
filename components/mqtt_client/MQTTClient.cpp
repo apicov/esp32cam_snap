@@ -1,10 +1,7 @@
 #include "MQTTClient.hpp"
 
 MQTTClient::MQTTClient(const char* mqtt_broker_uri)
-  :mqtt_broker_uri_(mqtt_broker_uri)
-{
-    init();
-}
+  :mqtt_broker_uri_(mqtt_broker_uri) {}
 
  void MQTTClient::init(){
 
