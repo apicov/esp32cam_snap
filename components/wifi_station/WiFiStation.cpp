@@ -34,10 +34,6 @@ void WiFiStation::init() {
     // Apply the Wi-Fi configuration
     esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
 
-    
-    // Set default handlers
-    set_default_handlers();
-
     // Start the Wi-Fi driver
     esp_wifi_start();
 
@@ -59,45 +55,39 @@ void WiFiStation::event_handler(void* this_, esp_event_base_t event_base, int32_
 }
 
 // Instance-level event handler
-void WiFiStation::handle(esp_event_base_t event_base, int32_t event_id, void* event_data) {
-    auto key = std::make_pair(event_base, event_id);
-    auto it = event_callbacks_.find(key);
+void WiFiStation::handle(esp_event_base_t base, int32_t id, void* data) {
 
-    //activate flag if connected
-    if((event_base == WIFI_EVENT) && (event_id == WIFI_EVENT_STA_DISCONNECTED)){
-        is_connected_.store(false);
-    }
-    else if((event_base == IP_EVENT) && (event_id == IP_EVENT_STA_GOT_IP)){
-        is_connected_.store(true);
-    }
+    bool handled{true};
 
+    // default handlers
+    if (base == WIFI_EVENT) {
+        switch(id) {
+        case WIFI_EVENT_STA_START:
+            ESP_LOGI(TAG, "started, connecting...");
+            esp_wifi_connect();
+            break;
+        case WIFI_EVENT_STA_DISCONNECTED:
+            is_connected_.store(false);
+            ESP_LOGI(TAG, "disconnected, retrying to connect...");
+            esp_wifi_connect();
+            break;
+        }
+    } else if(base == IP_EVENT) {
+        switch(id) {
+        case IP_EVENT_STA_GOT_IP:
+            is_connected_.store(true);
+            auto* event = static_cast<ip_event_got_ip_t*>(data);
+            ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
+            break;
+        }
+    } else handled = false;
+
+    // attend user handlers
+    auto it = event_callbacks_.find(std::make_pair(base, id));
     if (it != event_callbacks_.end()) {
         // Call the registered callback for this event
-        it->second(event_data);
-    } else {
-        ESP_LOGW(TAG, "Unhandled event: base=%s, id=%d", event_base, event_id);
+        it->second(data);
+    } else if (!handled) {
+        ESP_LOGW(TAG, "Unhandled event: base=%s, id=%d", base, id);
     }
 }
-
-// Set default handlers for Wi-Fi and IP events
-void WiFiStation::set_default_handlers() {
-    // Default handler for Wi-Fi STA start
-    register_event_callback(WIFI_EVENT, WIFI_EVENT_STA_START, [this](void* event_data) {
-        ESP_LOGI(TAG, "Wi-Fi started, connecting...");
-        esp_wifi_connect();
-    });
-
-    // Default handler for Wi-Fi STA disconnected
-    register_event_callback(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, [this](void* event_data) {
-        ESP_LOGI(TAG, "Wi-Fi disconnected, retrying...");
-        esp_wifi_connect();
-    });
-
-    // Default handler for IP STA got IP
-    register_event_callback(IP_EVENT, IP_EVENT_STA_GOT_IP, [this](void* event_data) {
-        auto* event = static_cast<ip_event_got_ip_t*>(event_data);
-        ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
-    });
-}
-
-
