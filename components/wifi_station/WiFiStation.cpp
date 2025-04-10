@@ -18,8 +18,9 @@ void WiFiStation::init() {
     esp_wifi_init(&cfg);
 
     // Register the static event handler
-    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFiStation::event_handler_static, this, NULL);
-    esp_event_handler_instance_register(IP_EVENT, ESP_EVENT_ANY_ID, &WiFiStation::event_handler_static, this, NULL);
+    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, event_handler, this, NULL);
+
+    esp_event_handler_instance_register(IP_EVENT, ESP_EVENT_ANY_ID, event_handler, this, NULL);
 
     // Configure Wi-Fi connection settings
     wifi_config_t wifi_config = {};
@@ -53,13 +54,12 @@ bool WiFiStation::is_connected() const {
 }
 
 // Static event handler required by the ESP-IDF
-void WiFiStation::event_handler_static(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-    auto* instance = static_cast<WiFiStation*>(arg);
-    instance->event_handler(event_base, event_id, event_data);
+void WiFiStation::event_handler(void* this_, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+    static_cast<WiFiStation*>(this_)->handle(event_base, event_id, event_data);
 }
 
 // Instance-level event handler
-void WiFiStation::event_handler(esp_event_base_t event_base, int32_t event_id, void* event_data) {
+void WiFiStation::handle(esp_event_base_t event_base, int32_t event_id, void* event_data) {
     auto key = std::make_pair(event_base, event_id);
     auto it = event_callbacks_.find(key);
 

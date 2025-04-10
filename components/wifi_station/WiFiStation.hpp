@@ -71,21 +71,8 @@ private:
     const char* password_; ///< The password for the WiFi network.
     std::atomic<bool> is_connected_; ///< Atomic flag indicating connection status.
 
-    /**
-     * @brief Static event handler required by the ESP-IDF.
-     *
-     * This static method serves as the event handler for WiFi events.
-     * It forwards the event to the appropriate callback registered by the user.
-     *
-     * @param arg User-defined argument passed to the handler.
-     * @param event_base The base ID of the event.
-     * @param event_id The identifier of the event.
-     * @param event_data Pointer to the event data.
-     */
-    static void event_handler_static(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
-
-    // Instance-level event handler
-    void event_handler(esp_event_base_t event_base, int32_t event_id, void* event_data);
+    static void event_handler(void* , esp_event_base_t, int32_t, void*);
+    void handle(esp_event_base_t event_base, int32_t event_id, void* event_data);
 
     // Set default handlers for Wi-Fi and IP events
     void set_default_handlers();
