@@ -18,8 +18,8 @@ void WiFiStation::init() {
     esp_wifi_init(&cfg);
 
     // Register the static event handler
-    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFiStation::event_handler_static, this, &instance_any_id_);
-    esp_event_handler_instance_register(IP_EVENT, ESP_EVENT_ANY_ID, &WiFiStation::event_handler_static, this, &instance_ip_event_);
+    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &WiFiStation::event_handler_static, this, NULL);
+    esp_event_handler_instance_register(IP_EVENT, ESP_EVENT_ANY_ID, &WiFiStation::event_handler_static, this, NULL);
 
     // Configure Wi-Fi connection settings
     wifi_config_t wifi_config = {};

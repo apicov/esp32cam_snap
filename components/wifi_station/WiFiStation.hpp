@@ -70,8 +70,6 @@ private:
     const char* ssid_; ///< The SSID of the WiFi network.
     const char* password_; ///< The password for the WiFi network.
     std::atomic<bool> is_connected_; ///< Atomic flag indicating connection status.
-    esp_event_handler_instance_t instance_any_id_; ///< Event handler instance for any event.
-    esp_event_handler_instance_t instance_ip_event_; ///< Event handler instance for IP events.
 
     /**
      * @brief Static event handler required by the ESP-IDF.
