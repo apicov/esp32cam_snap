@@ -32,7 +32,7 @@ void start_mqtt_client();
 void maybe_send_image();
 
 /* globals */
-MQTTClient mqtt(MQTT_URI); //MQTT object with broker uri
+MQTTClient *mqtt = nullptr;
 
 QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
 
@@ -93,7 +93,7 @@ void camera_task(void *p)
         //wait for mqtt command
         xQueueReceive(camera_evt_queue, &cmd, portMAX_DELAY);
 
-        if(mqtt.is_connected()){
+        if(mqtt && mqtt->is_connected()){
             cam.capture_do([](const auto &pic){
                 auto src = pic.image();
                 auto slen = pic.size();
@@ -103,7 +103,7 @@ void camera_task(void *p)
                   (unsigned char *) b64_buffer, b64_size, &olen, src, slen);
 
                 if (ret == 0) {
-                  mqtt.publish("/camera/img", b64_buffer, 2, 0);
+                  mqtt->publish("/camera/img", b64_buffer, 2, 0);
                   ESP_LOGI(__func__, "image sent");
                 }
                 else {
@@ -120,14 +120,15 @@ void camera_task(void *p)
 }
 
 void start_mqtt_client(){
-    mqtt.init();
-    mqtt.register_event_callback(MQTT_EVENT_CONNECTED, [](auto event_data) {
+    mqtt = new MQTTClient{MQTT_URI};
+    mqtt->init();
+    mqtt->register_event_callback(MQTT_EVENT_CONNECTED, [](auto event_data) {
         ESP_LOGI(__func__, "MQTT_connected");
-        mqtt.subscribe("/camera/cmd", 0);
+        mqtt->subscribe("/camera/cmd", 0);
     });
 
     // Triggered when the client receives data from a subscribed topic
-    mqtt.register_event_callback(MQTT_EVENT_DATA, [](auto event_data) {
+    mqtt->register_event_callback(MQTT_EVENT_DATA, [](auto event_data) {
         uint8_t cmd = 1; //dummy data to send to the queue
         ESP_LOGI(__func__, "MQTT_EVENT_DATA");
         ESP_LOGI(__func__, "Received topic: %.*s", event_data->topic_len, event_data->topic);
