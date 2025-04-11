@@ -53,14 +53,13 @@ bool WiFiStation::is_connected() const {
 }
 
 // Static event handler required by the ESP-IDF
-void WiFiStation::event_handler(void* this_, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-    static_cast<WiFiStation*>(this_)->handle(event_base, event_id, event_data);
+void WiFiStation::event_handler(void* this_, esp_event_base_t base, int32_t id, void* data) {
+    ESP_LOGD(TAG, "Received event: base=%s, id=%d", base, id);
+    static_cast<WiFiStation*>(this_)->handle(base, id, data);
 }
 
 // Instance-level event handler
 void WiFiStation::handle(esp_event_base_t base, int32_t id, void* data) {
-
-    ESP_LOGI(TAG, "Received event: base=%s, id=%d", base, id);
 
     // default handlers
     if (base == WIFI_EVENT) {
