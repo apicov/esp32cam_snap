@@ -121,7 +121,6 @@ void camera_task(void *p)
 
 void start_mqtt_client(){
     mqtt = new MQTTClient{MQTT_URI};
-    mqtt->init();
     mqtt->register_event_callback(MQTT_EVENT_CONNECTED, [](auto event_data) {
         ESP_LOGI(__func__, "MQTT_connected");
         mqtt->subscribe("/camera/cmd", 0);

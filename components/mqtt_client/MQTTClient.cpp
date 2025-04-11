@@ -1,20 +1,18 @@
 #include "MQTTClient.hpp"
 
 MQTTClient::MQTTClient(const char* mqtt_broker_uri)
-  :mqtt_broker_uri_(mqtt_broker_uri) {}
+  :mqtt_broker_uri_(mqtt_broker_uri) {
 
- void MQTTClient::init(){
+  ESP_LOGI(TAG, "Initializing MQTT client with URI: %s", mqtt_broker_uri_);
 
   // MQTT configuration
   esp_mqtt_client_config_t mqtt_cfg = {};
   mqtt_cfg.broker.address.uri = mqtt_broker_uri_;  // Correct URI assignment
   mqtt_cfg.session.keepalive = 10;  // Set the keep-alive interval
 
-  ESP_LOGI(TAG, "Initializing MQTT client with URI: %s", mqtt_broker_uri_);
-
   // Initialize MQTT client
   mqtt_client_ = esp_mqtt_client_init(&mqtt_cfg);
-  if (mqtt_client_ == NULL) {
+  if (!mqtt_client_) {
       ESP_LOGE(TAG, "Failed to initialize MQTT client");
       return;
   }

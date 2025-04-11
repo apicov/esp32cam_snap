@@ -90,18 +90,9 @@ public:
     // sane default value
     esp_err_t subscribe(const char* topic, int qos);
 
-    /**
-     * @brief Initializes the client instance.
-     *
-     * This method must be called before using the MQTTClient object
-     * to set up the necessary configurations and event handlers.
-     *
-     */
-    void init();
-
 private:
     std::atomic<bool> is_connected_; ///< Atomic flag indicating connection status.
-    esp_mqtt_client_handle_t mqtt_client_ = NULL; ///< Global MQTT client handle.
+    esp_mqtt_client_handle_t mqtt_client_ = nullptr; ///< Global MQTT client handle.
     std::unordered_map<int32_t, MQTTEventCallback> event_callbacks_; ///< Map of registered event callbacks.
     const char* mqtt_broker_uri_; ///< URI of the MQTT broker.
     static constexpr const char* TAG = "MQTTCLIENT"; ///< Log tag for MQTT operations.
