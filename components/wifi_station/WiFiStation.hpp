@@ -26,22 +26,17 @@ public:
     using WifiEventCallback = std::function<void(void*)>;
 
     /**
-     * @brief Constructor for the WiFiStation instances.
+     * @brief Startup the WiFi in station mode.
      *
-     * Initializes the WiFiStation with the provided SSID and password.
+     * If called more than once, it'll initialize the station only
+     * once and will return the same instance after each call.
      *
      * @param ssid The SSID of the WiFi network.
      * @param password The password for the WiFi network.
-     */
-    WiFiStation(const char* ssid, const char* password);
-
-    /**
-     * @brief Initialize the WiFiStation object.
      *
-     * This method must be called before using the WiFiStation object
-     * to set up the necessary configurations and event handlers.
+     * @return The instance of the WiFiStation.
      */
-    void init();
+    static WiFiStation& start(const char*, const char*);
 
     /**
      * @brief Register a callback on a connection event.
@@ -62,11 +57,15 @@ public:
 
 private:
     static constexpr const char* TAG = "WIFI"; ///< Log tag for WiFi operations.
+    static WiFiStation* instance;
     const char* ssid_; ///< The SSID of the WiFi network.
     const char* password_; ///< The password for the WiFi network.
     std::atomic<bool> is_connected_; ///< Atomic flag indicating connection status.
     std::vector<WifiEventCallback> on_connect_cb;
 
+    WiFiStation(const char* ssid, const char* password);
+    WiFiStation() = delete;
+    WiFiStation& operator=(WiFiStation const&) = delete;
 
     static void event_handler(void* , esp_event_base_t, int32_t, void*);
     void handle(esp_event_base_t , int32_t, void*);

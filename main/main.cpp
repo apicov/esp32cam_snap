@@ -32,7 +32,6 @@ void start_mqtt_client();
 void maybe_send_image();
 
 /* globals */
-WiFiStation wifi(SSID, PASSWORD);
 MQTTClient mqtt(MQTT_URI); //MQTT object with broker uri
 
 QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
@@ -70,8 +69,9 @@ extern "C" void app_main()
     ESP_ERROR_CHECK(ret);
 
     // WiFi
-    wifi.init();
-    wifi.on_connect([](auto _){ start_mqtt_client(); });
+    WiFiStation::start(SSID, PASSWORD).on_connect(
+      [](auto _){ start_mqtt_client(); }
+    );
 
     // queues
     camera_evt_queue = xQueueCreate(10, sizeof(uint8_t));

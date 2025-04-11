@@ -1,12 +1,11 @@
 #include "WiFiStation.hpp"
 
-WiFiStation::WiFiStation(const char* ssid, const char* password)
-    : ssid_{ssid}
-    , password_{password}
-    , is_connected_{false}
-    , on_connect_cb{} { }
+WiFiStation* WiFiStation::instance = nullptr;
+WiFiStation& WiFiStation::start(const char* ssid, const char* passwd) {
+    if (instance) return *instance;
 
-void WiFiStation::init() {
+    auto instance = new WiFiStation{ssid, passwd};
+
     // Initialize the TCP/IP stack
     esp_netif_init();
 
@@ -21,27 +20,27 @@ void WiFiStation::init() {
     esp_wifi_init(&cfg);
 
     // Register the static event handler
-    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, event_handler, this, NULL);
+    esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, event_handler, instance, NULL);
 
-    esp_event_handler_instance_register(IP_EVENT, ESP_EVENT_ANY_ID, event_handler, this, NULL);
+    esp_event_handler_instance_register(IP_EVENT, ESP_EVENT_ANY_ID, event_handler, instance, NULL);
 
     // Configure Wi-Fi connection settings
-    wifi_config_t wifi_config = {};
-    strcpy(reinterpret_cast<char*>(wifi_config.sta.ssid), ssid_);
-    strcpy(reinterpret_cast<char*>(wifi_config.sta.password), password_);
-    wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
+    wifi_config_t config = {};
+    strcpy(reinterpret_cast<char*>(config.sta.ssid), instance->ssid_);
+    strcpy(reinterpret_cast<char*>(config.sta.password), instance->password_);
+    config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
 
     // Set Wi-Fi mode to Station
     esp_wifi_set_mode(WIFI_MODE_STA);
 
     // Apply the Wi-Fi configuration
-    esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+    esp_wifi_set_config(WIFI_IF_STA, &config);
 
     // Start the Wi-Fi driver
     esp_wifi_start();
 
     ESP_LOGI(TAG, "Wi-Fi initialized in Station mode");
-
+    return *instance;
 }
 
 void WiFiStation::on_connect(WifiEventCallback f) {
@@ -52,7 +51,14 @@ bool WiFiStation::is_connected() const {
     return is_connected_.load();
 }
 
-// Static event handler required by the ESP-IDF
+// private methods
+// ===============
+WiFiStation::WiFiStation(const char* ssid, const char* password)
+    : ssid_{ssid}
+    , password_{password}
+    , is_connected_{false}
+    , on_connect_cb{} { }
+
 void WiFiStation::event_handler(void* this_, esp_event_base_t base, int32_t id, void* data) {
     ESP_LOGD(TAG, "Received event: base=%s, id=%d", base, id);
     static_cast<WiFiStation*>(this_)->handle(base, id, data);
