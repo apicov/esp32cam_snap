@@ -118,5 +118,5 @@ private:
      *
      * @param event_data The event data associated with the MQTT event.
      */
-  void handle(esp_event_base_t, int32_t, esp_mqtt_event_handle_t);
+    void handle(esp_event_base_t, int32_t, esp_mqtt_event_handle_t);
 };

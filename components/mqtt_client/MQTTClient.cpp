@@ -1,64 +1,64 @@
 #include "MQTTClient.hpp"
 
 MQTTClient::MQTTClient(const char* mqtt_broker_uri)
-  :mqtt_broker_uri_(mqtt_broker_uri) {
+    :mqtt_broker_uri_(mqtt_broker_uri) {
 
-  ESP_LOGI(TAG, "Initializing MQTT client with URI: %s", mqtt_broker_uri_);
+    ESP_LOGI(TAG, "Initializing MQTT client with URI: %s", mqtt_broker_uri_);
 
-  // MQTT configuration
-  esp_mqtt_client_config_t mqtt_cfg = {};
-  mqtt_cfg.broker.address.uri = mqtt_broker_uri_;  // Correct URI assignment
-  mqtt_cfg.session.keepalive = 10;  // Set the keep-alive interval
+    // MQTT configuration
+    esp_mqtt_client_config_t mqtt_cfg = {};
+    mqtt_cfg.broker.address.uri = mqtt_broker_uri_;  // Correct URI assignment
+    mqtt_cfg.session.keepalive = 10;  // Set the keep-alive interval
 
-  // Initialize MQTT client
-  mqtt_client_ = esp_mqtt_client_init(&mqtt_cfg);
-  if (!mqtt_client_) {
-      ESP_LOGE(TAG, "Failed to initialize MQTT client");
-      return;
-  }
+    // Initialize MQTT client
+    mqtt_client_ = esp_mqtt_client_init(&mqtt_cfg);
+    if (!mqtt_client_) {
+        ESP_LOGE(TAG, "Failed to initialize MQTT client");
+        return;
+    }
 
-  // Register the event handler
-  esp_mqtt_client_register_event(mqtt_client_, static_cast<esp_mqtt_event_id_t>(ESP_EVENT_ANY_ID), event_handler, this);
+    // Register the event handler
+    esp_mqtt_client_register_event(mqtt_client_, static_cast<esp_mqtt_event_id_t>(ESP_EVENT_ANY_ID), event_handler, this);
 
-  // Start the MQTT client
-  esp_mqtt_client_start(mqtt_client_);
+    // Start the MQTT client
+    esp_mqtt_client_start(mqtt_client_);
 
-  ESP_LOGI("TAG", "MQTT client initialized and started");
+    ESP_LOGI("TAG", "MQTT client initialized and started");
 }
 
 // Static event handler required by the ESP-IDF
 void MQTTClient::event_handler(void* arg, esp_event_base_t base, int32_t id, void* data) {
-  auto* instance = static_cast<MQTTClient*>(arg);
+    auto* instance = static_cast<MQTTClient*>(arg);
 
-  ESP_LOGD(TAG, "Received event id=%d", id);
-  instance->handle(base, id, (esp_mqtt_event_handle_t)data);
+    ESP_LOGD(TAG, "Received event id=%d", id);
+    instance->handle(base, id, (esp_mqtt_event_handle_t)data);
 }
 
 // Instance-level event handler
 void MQTTClient::handle(esp_event_base_t base, int32_t id, esp_mqtt_event_handle_t data) {
 
     //check if event is connected or disconnected to update is_connected_ variable
-  if(id == MQTT_EVENT_CONNECTED) {
-    is_connected_.store(true);
-    ESP_LOGI(TAG, "The client is connected");
-    // publish a test message to a "test" topic
-    //
-    // XXX: Probably this should be an optional feature, and it can
-    // be guraded by a "define" macro so the user can enable it at
-    // compile time
-    int msg_id = esp_mqtt_client_publish(
-        mqtt_client_, "/topic/test", "Hello from ESP32!", 0, 1, 0);
-    if (msg_id < 0)
-        ESP_LOGE(TAG, "Failed to publish in '/topic/test', msg_id=%d", msg_id);
-  }
-  else if (id == MQTT_EVENT_DISCONNECTED) {
-    is_connected_.store(false);
-  }
-  else if (id == MQTT_EVENT_DATA) {
-      ESP_LOGI(TAG, "Data received");
-      ESP_LOGI(TAG, "Received topic: %.*s", data->topic_len, data->topic);
-      ESP_LOGI(TAG, "Received data: %.*s", data->data_len, data->data);
-  }
+    if(id == MQTT_EVENT_CONNECTED) {
+        is_connected_.store(true);
+        ESP_LOGI(TAG, "The client is connected");
+        // publish a test message to a "test" topic
+        //
+        // XXX: Probably this should be an optional feature, and it can
+        // be guraded by a "define" macro so the user can enable it at
+        // compile time
+        int msg_id = esp_mqtt_client_publish(
+            mqtt_client_, "/topic/test", "Hello from ESP32!", 0, 1, 0);
+        if (msg_id < 0)
+            ESP_LOGE(TAG, "Failed to publish in '/topic/test', msg_id=%d", msg_id);
+    }
+    else if (id == MQTT_EVENT_DISCONNECTED) {
+        is_connected_.store(false);
+    }
+    else if (id == MQTT_EVENT_DATA) {
+        ESP_LOGI(TAG, "Data received");
+        ESP_LOGI(TAG, "Received topic: %.*s", data->topic_len, data->topic);
+        ESP_LOGI(TAG, "Received data: %.*s", data->data_len, data->data);
+    }
 
     auto key = data->event_id;
     auto it = event_callbacks_.find(key);
