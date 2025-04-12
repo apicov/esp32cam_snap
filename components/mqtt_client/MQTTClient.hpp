@@ -82,8 +82,6 @@ public:
      * @param topic The topic to subscribe to.
      * @param qos The Quality of Service level for the subscription.
      *
-     * @note If QoS is not to be used much in this application, consider providing
-     *       a sensible default value.
      * @return esp_err_t Error code indicating the result of the subscription attempt.
      */
     // TODO: if qos is not to be used much in this application, then maybe provide a
