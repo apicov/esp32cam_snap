@@ -96,7 +96,7 @@ void camera_task(void *p)
                   (unsigned char *) b64_buffer, b64_size, &olen, src, slen);
 
                 if (ret == 0) {
-                  mqtt->publish("/camera/img", b64_buffer, 2, 0);
+                  mqtt->publish(MQTT_IMG_TOPIC, b64_buffer, 2, 0);
                 }
                 else {
                   ESP_LOGE(TAG, "the dest buffer is too small (%zu)"
@@ -113,14 +113,14 @@ void camera_task(void *p)
 
 void start_mqtt_client(){
     mqtt = new MQTTClient{MQTT_URI};
-    mqtt->on_connect([](auto _) { mqtt->subscribe("/camera/cmd"); });
+    mqtt->on_connect([](auto _) { mqtt->subscribe(MQTT_CMD_TOPIC); });
     mqtt->on_data_received([](auto data) {
         uint8_t cmd = 1; //dummy data to send to the queue
         ESP_LOGI(TAG, "Received on topic: %.*s", data->topic_len, data->topic);
         ESP_LOGI(TAG, "Received command: '%.*s'", data->data_len, data->data);
 
         // Check if the received message is a snap command
-        if (strncmp(data->topic, "/camera/cmd", data->topic_len) == 0) {
+        if (strncmp(data->topic, MQTT_CMD_TOPIC, data->topic_len) == 0) {
             if (strncmp(data->data, "snap", data->data_len) == 0)
                 xQueueSend(camera_evt_queue, &cmd, 0);
         }

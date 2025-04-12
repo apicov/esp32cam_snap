@@ -1,13 +1,13 @@
 #pragma once
 #include <atomic>
+#include <cstring>
 #include <functional>
 #include <vector>
 
-#include <unordered_map>
 #include "esp_event.h"
 #include "esp_wifi.h"
 #include "esp_log.h"
-#include <string.h>
+
 
 /**
  * @brief A thin wrapper around the ESP-IDF "esp_wifi" for quick use.

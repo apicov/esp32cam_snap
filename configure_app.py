@@ -13,6 +13,9 @@ def header_string():
     Prompts the user for the neccessary information required to configure
     the project. The returned string has the format for a header file
     '''
+    default_cmd = "/camera/cmd"
+    default_img = "/camera/img"
+
     ssid, passwd, uri = [
         input(f'Enter {s}: ') for s in [
         'WIFI SSID',
@@ -25,6 +28,12 @@ def header_string():
     host, port = uri if len(uri) > 1 \
         else [uri[0], input('Enter the MQTT port: ')]
 
+    cmd_topic = input(f"MQTT topic to read commands from [{default_cmd}]: ") \
+        or default_cmd
+
+    img_topic = input(f"MQTT topic to send images to [{default_img}]: ") \
+        or default_img
+
     return f'''
 #ifndef APP_CONFIGURATION_H
 #define APP_CONFIGURATION_H
@@ -32,6 +41,8 @@ def header_string():
 #define SSID "{ssid}"
 #define PASSWORD "{passwd}"
 #define MQTT_URI "mqtt://{host}:{port}"
+#define MQTT_CMD_TOPIC "{cmd_topic}"
+#define MQTT_IMG_TOPIC "{img_topic}"
 
 #endif
 '''
@@ -64,16 +75,19 @@ else:
 #define SSID "my_ssid"
 #define PASSWORD "my_passwd"
 #define MQTT_URI "mqtt://127.0.0.1:1234"
+#define MQTT_CMD_TOPIC "/camera/cmd"
+#define MQTT_IMG_TOPIC "/camera/img"
 
 #endif
 '''
-    answers = ['my_ssid', 'my_passwd', 'mqtt://127.0.0.1:1234']
+    answers = ['my_ssid', 'my_passwd', 'mqtt://127.0.0.1:1234', '', '']
     assert header_string() == expect
 
-    answers = ['my_ssid', 'my_passwd', '127.0.0.1', '1234']
+    answers = ['my_ssid', 'my_passwd', '127.0.0.1', '1234', '', '']
     assert header_string() == expect
 
-    answers = ['my_ssid', 'my_passwd', '127.0.0.1:1234']
+    answers = ['my_ssid', 'my_passwd', '127.0.0.1:1234', '', '']
     assert header_string() == expect
+
 
     print("ok")
