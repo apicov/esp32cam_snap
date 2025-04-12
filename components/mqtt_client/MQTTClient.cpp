@@ -28,15 +28,12 @@ MQTTClient::MQTTClient(const char* mqtt_broker_uri)
 
 // Static event handler required by the ESP-IDF
 void MQTTClient::event_handler(void* arg, esp_event_base_t base, int32_t id, void* data) {
-    auto* instance = static_cast<MQTTClient*>(arg);
-
     ESP_LOGD(TAG, "Received event id=%d", id);
-    instance->handle(base, id, (esp_mqtt_event_handle_t)data);
+    static_cast<MQTTClient*>(arg)->handle(base, id, (esp_mqtt_event_handle_t)data);
 }
 
 // Instance-level event handler
 void MQTTClient::handle(esp_event_base_t base, int32_t id, esp_mqtt_event_handle_t data) {
-    //check if event is connected or disconnected to update is_connected_ variable
     if(id == MQTT_EVENT_CONNECTED) {
         is_connected_.store(true);
         ESP_LOGI(TAG, "The client is connected");
@@ -53,8 +50,6 @@ void MQTTClient::handle(esp_event_base_t base, int32_t id, esp_mqtt_event_handle
     }
     else if (id == MQTT_EVENT_DATA) {
         ESP_LOGI(TAG, "Data received");
-        ESP_LOGI(TAG, "Received topic: %.*s", data->topic_len, data->topic);
-        ESP_LOGI(TAG, "Received data: %.*s", data->data_len, data->data);
         for (const auto& f: on_data_received_cb) f(data);
     }
     else {
