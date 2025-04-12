@@ -118,13 +118,5 @@ private:
      *
      * @param event_data The event data associated with the MQTT event.
      */
-    void handle(esp_mqtt_event_handle_t event_data);
-
-    /**
-     * @brief Set default handlers for Wi-Fi and IP events.
-     *
-     * This method configures default event handlers for Wi-Fi and IP events
-     * to ensure that the MQTT client can handle connectivity changes appropriately.
-     */
-    void set_default_handlers();
+  void handle(esp_event_base_t, int32_t, esp_mqtt_event_handle_t);
 };

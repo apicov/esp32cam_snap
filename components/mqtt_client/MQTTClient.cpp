@@ -20,9 +20,6 @@ MQTTClient::MQTTClient(const char* mqtt_broker_uri)
   // Register the event handler
   esp_mqtt_client_register_event(mqtt_client_, static_cast<esp_mqtt_event_id_t>(ESP_EVENT_ANY_ID), event_handler, this);
 
-  //set default handlers
-  set_default_handlers();
-
   // Start the MQTT client
   esp_mqtt_client_start(mqtt_client_);
 
@@ -30,24 +27,39 @@ MQTTClient::MQTTClient(const char* mqtt_broker_uri)
 }
 
 // Static event handler required by the ESP-IDF
-void MQTTClient::event_handler(void* arg, esp_event_base_t _, int32_t id, void* data) {
+void MQTTClient::event_handler(void* arg, esp_event_base_t base, int32_t id, void* data) {
   auto* instance = static_cast<MQTTClient*>(arg);
 
   ESP_LOGD(TAG, "Received event id=%d", id);
-
-  //check if event is connected or disconnected to update is_connected_ variable
-  if(id == MQTT_EVENT_CONNECTED){
-    instance->is_connected_.store(true);
-  }
-  else if(id == MQTT_EVENT_DISCONNECTED){
-    instance->is_connected_.store(false);
-  }
-
-  instance->handle((esp_mqtt_event_handle_t)data);
+  instance->handle(base, id, (esp_mqtt_event_handle_t)data);
 }
 
 // Instance-level event handler
-void MQTTClient::handle(esp_mqtt_event_handle_t data) {
+void MQTTClient::handle(esp_event_base_t base, int32_t id, esp_mqtt_event_handle_t data) {
+
+    //check if event is connected or disconnected to update is_connected_ variable
+  if(id == MQTT_EVENT_CONNECTED) {
+    is_connected_.store(true);
+    ESP_LOGI(TAG, "The client is connected");
+    // publish a test message to a "test" topic
+    //
+    // XXX: Probably this should be an optional feature, and it can
+    // be guraded by a "define" macro so the user can enable it at
+    // compile time
+    int msg_id = esp_mqtt_client_publish(
+        mqtt_client_, "/topic/test", "Hello from ESP32!", 0, 1, 0);
+    if (msg_id < 0)
+        ESP_LOGE(TAG, "Failed to publish in '/topic/test', msg_id=%d", msg_id);
+  }
+  else if (id == MQTT_EVENT_DISCONNECTED) {
+    is_connected_.store(false);
+  }
+  else if (id == MQTT_EVENT_DATA) {
+      ESP_LOGI(TAG, "Data received");
+      ESP_LOGI(TAG, "Received topic: %.*s", data->topic_len, data->topic);
+      ESP_LOGI(TAG, "Received data: %.*s", data->data_len, data->data);
+  }
+
     auto key = data->event_id;
     auto it = event_callbacks_.find(key);
 
@@ -87,25 +99,4 @@ void MQTTClient::publish(const char* topic, const char* data, int qos, int retai
 
 esp_err_t MQTTClient::subscribe(const char* topic, int qos){
     return esp_mqtt_client_subscribe(mqtt_client_, topic, qos);
-}
-
-// Set default handlers for MQTT events
-void MQTTClient::set_default_handlers() {
-    // Triggered when the client successfully connects to the broker
-    register_event_callback(MQTT_EVENT_CONNECTED, [this](auto _) {
-        ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
-        // Publish a test message
-        int msg_id = esp_mqtt_client_publish(
-            mqtt_client_, "/topic/test", "Hello from ESP32!",0, 1, 0
-        );
-        if (msg_id < 0)
-            ESP_LOGE(TAG, "Failed to publish in '/topic/test', msg_id=%d", msg_id);
-    });
-
-    // Triggered when the client receives data from a subscribed topic
-    register_event_callback(MQTT_EVENT_DATA, [this](auto data) {
-        ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-        ESP_LOGI(TAG, "Received topic: %.*s", data->topic_len, data->topic);
-        ESP_LOGI(TAG, "Received data: %.*s", data->data_len, data->data);
-    });
 }
