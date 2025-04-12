@@ -22,7 +22,6 @@
 #include <MQTTClient.hpp>
 #include <WiFiStation.hpp>
 
-
 #include "app_configuration.h"
 
 /* prototypes */
@@ -31,30 +30,11 @@ void start_mqtt_client();
 
 /* globals */
 MQTTClient *mqtt = nullptr;
-
 QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
-
-// TODO: if the image resolution can be adjusted, then it might be
-// a good idea to make the dimensions configurable
-constexpr size_t image_size{160 * 120 * 3};
-
- //buffer for base64 encoding
-constexpr size_t b64_size{(4 * ((image_size + 2) / 3)) + 1};
-char  *b64_buffer;
 
 extern "C" void app_main()
 {
     ESP_LOGI(__func__, "starting...");
-
-    // Allocate base64_encode in external ram
-    // TODO: does it have to be in external RAM?
-    b64_buffer = (char*) heap_caps_malloc(b64_size, MALLOC_CAP_SPIRAM);
-    if (b64_buffer == NULL) {
-        ESP_LOGE(__func__, "Failed to allocate memory in PSRAM");
-        return;
-    }
-
-    // initialize components ...
 
     // gpio
     gpio_set_direction(GPIO_NUM_33, GPIO_MODE_OUTPUT);
@@ -87,13 +67,26 @@ void camera_task(void *p)
     CameraCtl cam{};
     uint8_t cmd;
 
+    // TODO: if the image resolution can be adjusted, then it might be
+    // a good idea to make the dimensions configurable
+    constexpr size_t image_size{160 * 120 * 3};
+    constexpr size_t b64_size{(4 * ((image_size + 2) / 3)) + 1};
+    // Allocate base64_encode in external ram
+    // TODO: does it have to be in external RAM?
+    char* b64_buffer = (char*)heap_caps_malloc(b64_size, MALLOC_CAP_SPIRAM);
+    if (b64_buffer == NULL) {
+        ESP_LOGE(__func__, "Failed to allocate memory in PSRAM");
+        // TODO: die here...
+        return;
+    }
+
     while(1)
     {
         //wait for mqtt command
         xQueueReceive(camera_evt_queue, &cmd, portMAX_DELAY);
 
         if(mqtt && mqtt->is_connected()){
-            cam.capture_do([](const auto &pic){
+            cam.capture_do([b64_buffer](const auto &pic){
                 auto src = pic.image();
                 auto slen = pic.size();
                 size_t olen;
