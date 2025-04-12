@@ -33,6 +33,8 @@ MQTTClient::MQTTClient(const char* mqtt_broker_uri)
 void MQTTClient::event_handler(void* arg, esp_event_base_t _, int32_t id, void* data) {
   auto* instance = static_cast<MQTTClient*>(arg);
 
+  ESP_LOGD(TAG, "Received event id=%d", id);
+
   //check if event is connected or disconnected to update is_connected_ variable
   if(id == MQTT_EVENT_CONNECTED){
     instance->is_connected_.store(true);
@@ -44,6 +46,18 @@ void MQTTClient::event_handler(void* arg, esp_event_base_t _, int32_t id, void* 
   instance->handle((esp_mqtt_event_handle_t)data);
 }
 
+// Instance-level event handler
+void MQTTClient::handle(esp_mqtt_event_handle_t data) {
+    auto key = data->event_id;
+    auto it = event_callbacks_.find(key);
+
+    if (it != event_callbacks_.end()) {
+        // Call the registered callback for this event
+        it->second(data);
+    } else {
+        ESP_LOGW(TAG, "Unhandled event: id=%d", data->event_id );
+    }
+}
 
 void MQTTClient::register_event_callback(int32_t event_id, MQTTEventCallback callback) {
     event_callbacks_[event_id] = std::move(callback);
@@ -52,7 +66,6 @@ void MQTTClient::register_event_callback(int32_t event_id, MQTTEventCallback cal
 bool MQTTClient::is_connected() const {
     return is_connected_.load();
 }
-
 
 void MQTTClient::publish(const char* topic, const char* data, int qos, int retain) {
     // Check if the MQTT client is connected before attempting to publish
@@ -76,24 +89,10 @@ esp_err_t MQTTClient::subscribe(const char* topic, int qos){
     return esp_mqtt_client_subscribe(mqtt_client_, topic, qos);
 }
 
-// Instance-level event handler
-void MQTTClient::handle(esp_mqtt_event_handle_t data) {
-    auto key = data->event_id;
-    auto it = event_callbacks_.find(key);
-
-    if (it != event_callbacks_.end()) {
-        // Call the registered callback for this event
-        it->second(data);
-    } else {
-        ESP_LOGW(TAG, "Unhandled event: id=%d", data->event_id );
-    }
-}
-
-
 // Set default handlers for MQTT events
 void MQTTClient::set_default_handlers() {
     // Triggered when the client successfully connects to the broker
-    register_event_callback(MQTT_EVENT_CONNECTED, [this](esp_mqtt_event_handle_t event_data) {
+    register_event_callback(MQTT_EVENT_CONNECTED, [this](auto _) {
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
         // Publish a test message
         int msg_id = esp_mqtt_client_publish(
@@ -103,45 +102,10 @@ void MQTTClient::set_default_handlers() {
             ESP_LOGE(TAG, "Failed to publish in '/topic/test', msg_id=%d", msg_id);
     });
 
-    // Triggered when the client disconnects from the broker
-    register_event_callback(MQTT_EVENT_DISCONNECTED, [this](esp_mqtt_event_handle_t event_data) {
-        ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
-    });
-
-    // Triggered when there is an error in the MQTT client
-    register_event_callback(MQTT_EVENT_ERROR, [this](esp_mqtt_event_handle_t event_data) {
-        ESP_LOGE(TAG, "MQTT_EVENT_ERROR");
-    });
-
-    // Triggered when a message is successfully published
-    register_event_callback(MQTT_EVENT_PUBLISHED, [this](esp_mqtt_event_handle_t event_data) {
-        ESP_LOGI(TAG, "MQTT_EVENT_PUBLISHED, msg_id=%d", event_data->msg_id);
-    });
-
-    // Triggered when the client successfully subscribes to a topic
-    register_event_callback(MQTT_EVENT_SUBSCRIBED, [this](esp_mqtt_event_handle_t event_data) {
-        ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event_data->msg_id);
-    });
-
-    // Triggered when the client successfully unsubscribes from a topic
-    register_event_callback(MQTT_EVENT_UNSUBSCRIBED, [this]( esp_mqtt_event_handle_t event_data) {
-        ESP_LOGI(TAG, "MQTT_EVENT_UNSUBSCRIBED, msg_id=%d", event_data->msg_id);
-    });
-
     // Triggered when the client receives data from a subscribed topic
-    register_event_callback(MQTT_EVENT_DATA, [this](esp_mqtt_event_handle_t event_data) {
+    register_event_callback(MQTT_EVENT_DATA, [this](auto data) {
         ESP_LOGI(TAG, "MQTT_EVENT_DATA");
-        ESP_LOGI(TAG, "Received topic: %.*s", event_data->topic_len, event_data->topic);
-        ESP_LOGI(TAG, "Received data: %.*s", event_data->data_len, event_data->data);
-    });
-
-    // Triggered before the client attempts to connect to the broker
-    register_event_callback(MQTT_EVENT_BEFORE_CONNECT, [this](void* event_data) {
-        ESP_LOGI(TAG, "MQTT_EVENT_BEFORE_CONNECT");
-    });
-
-    // Triggered when the client is deleted
-    register_event_callback(MQTT_EVENT_DELETED, [this](void* event_data) {
-        ESP_LOGI(TAG, "MQTT_EVENT_DELETED");
+        ESP_LOGI(TAG, "Received topic: %.*s", data->topic_len, data->topic);
+        ESP_LOGI(TAG, "Received data: %.*s", data->data_len, data->data);
     });
 }
