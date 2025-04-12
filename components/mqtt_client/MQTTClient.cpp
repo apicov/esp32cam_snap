@@ -18,7 +18,7 @@ MQTTClient::MQTTClient(const char* mqtt_broker_uri)
   }
 
   // Register the event handler
-  esp_mqtt_client_register_event(mqtt_client_, static_cast<esp_mqtt_event_id_t>(ESP_EVENT_ANY_ID), &MQTTClient::event_handler_static, this);
+  esp_mqtt_client_register_event(mqtt_client_, static_cast<esp_mqtt_event_id_t>(ESP_EVENT_ANY_ID), event_handler, this);
 
   //set default handlers
   set_default_handlers();
@@ -30,19 +30,18 @@ MQTTClient::MQTTClient(const char* mqtt_broker_uri)
 }
 
 // Static event handler required by the ESP-IDF
-void MQTTClient::event_handler_static(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+void MQTTClient::event_handler(void* arg, esp_event_base_t _, int32_t id, void* data) {
   auto* instance = static_cast<MQTTClient*>(arg);
-  auto event = (esp_mqtt_event_handle_t)event_data;
 
   //check if event is connected or disconnected to update is_connected_ variable
-  if(event_id == MQTT_EVENT_CONNECTED){
+  if(id == MQTT_EVENT_CONNECTED){
     instance->is_connected_.store(true);
   }
-  else if(event_id == MQTT_EVENT_DISCONNECTED){
+  else if(id == MQTT_EVENT_DISCONNECTED){
     instance->is_connected_.store(false);
   }
 
-  instance->event_handler(event);
+  instance->handle((esp_mqtt_event_handle_t)data);
 }
 
 
@@ -78,15 +77,15 @@ esp_err_t MQTTClient::subscribe(const char* topic, int qos){
 }
 
 // Instance-level event handler
-void MQTTClient::event_handler(esp_mqtt_event_handle_t event_data) {
-    auto key = event_data->event_id;
+void MQTTClient::handle(esp_mqtt_event_handle_t data) {
+    auto key = data->event_id;
     auto it = event_callbacks_.find(key);
 
     if (it != event_callbacks_.end()) {
         // Call the registered callback for this event
-        it->second(event_data);
+        it->second(data);
     } else {
-        ESP_LOGW(TAG, "Unhandled event: id=%d", event_data->event_id );
+        ESP_LOGW(TAG, "Unhandled event: id=%d", data->event_id );
     }
 }
 

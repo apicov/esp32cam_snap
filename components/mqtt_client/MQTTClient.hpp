@@ -108,7 +108,7 @@ private:
      * @param event_id The identifier of the event.
      * @param event_data Pointer to the event data.
      */
-    static void event_handler_static(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
+    static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
 
     /**
      * @brief Instance-level event handler.
@@ -118,7 +118,7 @@ private:
      *
      * @param event_data The event data associated with the MQTT event.
      */
-    void event_handler(esp_mqtt_event_handle_t event_data);
+    void handle(esp_mqtt_event_handle_t event_data);
 
     /**
      * @brief Set default handlers for Wi-Fi and IP events.
