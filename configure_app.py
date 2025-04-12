@@ -6,7 +6,7 @@ _help = f'''Usage: configure_app [-h]
 Prompts the user for the necessary information to configure this project.
 
 The configuration will be stored in the "{header}" file; every
-invokation of this script will first delete the contents of such file.'''
+invocation of this script will first delete the contents of such file.'''
 
 def header_string():
     '''
