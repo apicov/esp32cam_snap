@@ -32,23 +32,6 @@ public:
     MQTTClient(const char* uri);
 
     /**
-     * @brief Register a callback for a given event.
-     *
-     * This method allows the user to register a callback function
-     * that will be invoked when the specified MQTT event occurs.
-     *
-     * @param event_id The event identifier, which can be one of:
-     *    - MQTT_EVENT_CONNECTED for a successful connection event
-     *    - MQTT_EVENT_DATA when new data is available
-     *
-     * @param callback The "FunctionObject" to execute when the event occurs.
-     *
-     */
-    // TODO: It might be a better idea to encapsulate the "event_id" in an enum
-    // so we don't pass the event details from "mqtt_client" to the user
-    void register_event_callback(int32_t event_id, MQTTEventCallback callback);
-
-    /**
      * @brief Predicate to check if the client is connected.
      *
      * This method checks the current connection status of the MQTT client.
@@ -87,7 +70,6 @@ public:
     // TODO: if qos is not to be used much in this application, then maybe provide a
     // sane default value
     esp_err_t subscribe(const char* topic, int qos=0);
-
 
     /**
      * @brief Enqueue an action to execute on a connect event
