@@ -56,7 +56,7 @@ public:
     bool is_connected() const;
 
 private:
-    static constexpr const char* TAG = "WIFI"; ///< Log tag for WiFi operations.
+    static constexpr const char* TAG = "wifi_station";
     static WiFiStation* instance;
     const char* ssid_; ///< The SSID of the WiFi network.
     const char* password_; ///< The password for the WiFi network.

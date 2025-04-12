@@ -29,12 +29,13 @@ void camera_task(void *p);
 void start_mqtt_client();
 
 /* globals */
+const char *TAG = "main";
 MQTTClient *mqtt = nullptr;
 QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
 
 extern "C" void app_main()
 {
-    ESP_LOGI(__func__, "starting...");
+    ESP_LOGI(TAG, "Starting application...");
 
     // gpio
     gpio_set_direction(GPIO_NUM_33, GPIO_MODE_OUTPUT);
@@ -58,7 +59,7 @@ extern "C" void app_main()
     // tasks
     xTaskCreate(camera_task, "camera", 4096, NULL, 5, NULL);
 
-    ESP_LOGI(__func__, "ESP32-cam_AI is running");
+    ESP_LOGI(TAG, "ESP32-cam_AI is running");
 } // end of app_main
 
 
@@ -71,11 +72,11 @@ void camera_task(void *p)
     // a good idea to make the dimensions configurable
     constexpr size_t image_size{160 * 120 * 3};
     constexpr size_t b64_size{(4 * ((image_size + 2) / 3)) + 1};
-    // Allocate base64_encode in external ram
-    // TODO: does it have to be in external RAM?
+
+    // TODO: does this allocation have to be in external RAM?
     char* b64_buffer = (char*)heap_caps_malloc(b64_size, MALLOC_CAP_SPIRAM);
     if (b64_buffer == NULL) {
-        ESP_LOGE(__func__, "Failed to allocate memory in PSRAM");
+        ESP_LOGE(TAG, "Failed to allocate memory in PSRAM");
         // TODO: die here...
         return;
     }
@@ -85,7 +86,7 @@ void camera_task(void *p)
         //wait for mqtt command
         xQueueReceive(camera_evt_queue, &cmd, portMAX_DELAY);
 
-        if(mqtt && mqtt->is_connected()){
+        if(mqtt && mqtt->is_connected()) {
             cam.capture_do([b64_buffer](const auto &pic){
                 auto src = pic.image();
                 auto slen = pic.size();
@@ -96,16 +97,15 @@ void camera_task(void *p)
 
                 if (ret == 0) {
                   mqtt->publish("/camera/img", b64_buffer, 2, 0);
-                  ESP_LOGI(__func__, "image sent");
                 }
                 else {
-                  ESP_LOGE(__func__, "the dest buffer is too small (%zu)"
+                  ESP_LOGE(TAG, "the dest buffer is too small (%zu)"
                            ", it requires a length of %zu", b64_size, olen);
                 }
             });
         }
         else
-            ESP_LOGE(__func__, "MQTT not connected");
+            ESP_LOGE(TAG, "MQTT not connected");
 
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
@@ -116,17 +116,13 @@ void start_mqtt_client(){
     mqtt->on_connect([](auto _) { mqtt->subscribe("/camera/cmd"); });
     mqtt->on_data_received([](auto data) {
         uint8_t cmd = 1; //dummy data to send to the queue
-        ESP_LOGI(__func__, "Received topic: %.*s", data->topic_len, data->topic);
-        ESP_LOGI(__func__, "Received data: %.*s", data->data_len, data->data);
+        ESP_LOGI(TAG, "Received on topic: %.*s", data->topic_len, data->topic);
+        ESP_LOGI(TAG, "Received command: '%.*s'", data->data_len, data->data);
 
         // Check if the received message is a snap command
         if (strncmp(data->topic, "/camera/cmd", data->topic_len) == 0) {
-            if (strncmp(data->data, "snap", data->data_len) == 0) {
-                ESP_LOGI(__func__, "snap command received");
+            if (strncmp(data->data, "snap", data->data_len) == 0)
                 xQueueSend(camera_evt_queue, &cmd, 0);
-            }
         }
     });
-
-    ESP_LOGI(__func__, "mqtt client initialized");
 }

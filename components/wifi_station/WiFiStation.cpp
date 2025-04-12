@@ -84,7 +84,7 @@ void WiFiStation::handle(esp_event_base_t base, int32_t id, void* data) {
             is_connected_.store(true);
 
             auto* event = static_cast<ip_event_got_ip_t*>(data);
-            ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
+            ESP_LOGI(TAG, "Got IP " IPSTR, IP2STR(&event->ip_info.ip));
 
             for (const auto &f: this->on_connect_cb) {
                 ESP_LOGD(TAG, "Executing user handlers");

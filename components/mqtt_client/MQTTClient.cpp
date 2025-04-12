@@ -3,7 +3,7 @@
 MQTTClient::MQTTClient(const char* mqtt_broker_uri)
     :mqtt_broker_uri_(mqtt_broker_uri) {
 
-    ESP_LOGI(TAG, "Initializing MQTT client with URI: %s", mqtt_broker_uri_);
+    ESP_LOGI(TAG, "Initializing with %s", mqtt_broker_uri_);
 
     // MQTT configuration
     esp_mqtt_client_config_t mqtt_cfg = {};
@@ -26,7 +26,7 @@ MQTTClient::MQTTClient(const char* mqtt_broker_uri)
 
     // Start the MQTT client
     esp_mqtt_client_start(mqtt_client_);
-    ESP_LOGI(TAG, "started");
+    ESP_LOGI(TAG, "Initialized");
 }
 
 // Static event handler required by the ESP-IDF
@@ -39,11 +39,11 @@ void MQTTClient::event_handler(void* arg, esp_event_base_t base, int32_t id, voi
 void MQTTClient::handle(esp_event_base_t base, int32_t id, esp_mqtt_event_handle_t data) {
     if(id == MQTT_EVENT_CONNECTED) {
         is_connected_.store(true);
-        ESP_LOGI(TAG, "The client is connected");
+        ESP_LOGI(TAG, "Connected to broker");
 
         // XXX: Publishing a test message should be an optional feature,
         // which could be enabled by the user at compile time
-        ESP_LOGI(TAG, "Sending a test message...");
+        ESP_LOGI(TAG, "Sending a test message");
         publish("/topic/test", "Hello from ESP32!", 1, 0);
         for (const auto& f: on_connect_cb) f(data);
     }
@@ -53,7 +53,7 @@ void MQTTClient::handle(esp_event_base_t base, int32_t id, esp_mqtt_event_handle
         for (const auto& f: on_disconnect_cb) f(data);
     }
     else if (id == MQTT_EVENT_DATA) {
-        ESP_LOGI(TAG, "Data received");
+        ESP_LOGI(TAG, "Incoming data");
         for (const auto& f: on_data_received_cb) f(data);
     }
 }
@@ -87,7 +87,7 @@ void MQTTClient::publish(const char* topic, const char* data, int qos, int retai
 
     // Check if the message was published successfully
     if (msg_id != -1) {
-        ESP_LOGI(TAG, "Message published successfully, msg_id=%d", msg_id);
+        ESP_LOGI(TAG, "The message was published with id=%d", msg_id);
     } else {
         ESP_LOGE(TAG, "Failed to publish message");
     }

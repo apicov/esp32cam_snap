@@ -119,34 +119,15 @@ public:
     MQTTClient& on_data_received(MQTTEventCallback);
 
 private:
+    static constexpr const char* TAG = "mqtt_client"; ///< Log tag for MQTT operations.
+
     std::atomic<bool> is_connected_; ///< Atomic flag indicating connection status.
     esp_mqtt_client_handle_t mqtt_client_ = nullptr; ///< Global MQTT client handle.
     std::vector<MQTTEventCallback> on_connect_cb;
     std::vector<MQTTEventCallback> on_disconnect_cb;
     std::vector<MQTTEventCallback> on_data_received_cb;
     const char* mqtt_broker_uri_; ///< URI of the MQTT broker.
-    static constexpr const char* TAG = "MQTTCLIENT"; ///< Log tag for MQTT operations.
 
-    /**
-     * @brief Static event handler required by the ESP-IDF.
-     *
-     * This static method serves as the event handler for MQTT events.
-     * It forwards the event to the appropriate instance-level handler.
-     *
-     * @param arg User-defined argument passed to the handler.
-     * @param event_base The base ID of the event.
-     * @param event_id The identifier of the event.
-     * @param event_data Pointer to the event data.
-     */
-    static void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data);
-
-    /**
-     * @brief Instance-level event handler.
-     *
-     * This method handles MQTT events at the instance level, processing
-     * the event data and invoking the registered callback if applicable.
-     *
-     * @param event_data The event data associated with the MQTT event.
-     */
+    static void event_handler(void*, esp_event_base_t, int32_t, void*);
     void handle(esp_event_base_t, int32_t, esp_mqtt_event_handle_t);
 };
