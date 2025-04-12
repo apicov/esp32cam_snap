@@ -88,7 +88,7 @@ public:
      */
     // TODO: if qos is not to be used much in this application, then maybe provide a
     // sane default value
-    esp_err_t subscribe(const char* topic, int qos);
+    esp_err_t subscribe(const char* topic, int qos=0);
 
 
     /**

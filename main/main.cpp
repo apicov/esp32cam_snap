@@ -27,9 +27,7 @@
 
 /* prototypes */
 void camera_task(void *p);
-void mqtt_task(void *p);
 void start_mqtt_client();
-void maybe_send_image();
 
 /* globals */
 MQTTClient *mqtt = nullptr;
@@ -57,6 +55,7 @@ extern "C" void app_main()
     }
 
     // initialize components ...
+
     // gpio
     gpio_set_direction(GPIO_NUM_33, GPIO_MODE_OUTPUT);
 
@@ -121,8 +120,7 @@ void camera_task(void *p)
 
 void start_mqtt_client(){
     mqtt = new MQTTClient{MQTT_URI};
-
-    mqtt->on_connect([](auto _) { mqtt->subscribe("/camera/cmd", 0); });
+    mqtt->on_connect([](auto _) { mqtt->subscribe("/camera/cmd"); });
     mqtt->on_data_received([](auto data) {
         uint8_t cmd = 1; //dummy data to send to the queue
         ESP_LOGI(__func__, "Received topic: %.*s", data->topic_len, data->topic);

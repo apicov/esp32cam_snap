@@ -11,19 +11,22 @@ MQTTClient::MQTTClient(const char* mqtt_broker_uri)
     mqtt_cfg.session.keepalive = 10;  // Set the keep-alive interval
 
     // Initialize MQTT client
-    mqtt_client_ = esp_mqtt_client_init(&mqtt_cfg);
-    if (!mqtt_client_) {
+    if (!(mqtt_client_= esp_mqtt_client_init(&mqtt_cfg))) {
         ESP_LOGE(TAG, "Failed to initialize MQTT client");
         return;
     }
 
-    // Register the event handler
-    esp_mqtt_client_register_event(mqtt_client_, static_cast<esp_mqtt_event_id_t>(ESP_EVENT_ANY_ID), event_handler, this);
+    // Register the handler for the supported events
+    for (const esp_mqtt_event_id_t& e:{
+            MQTT_EVENT_CONNECTED,
+            MQTT_EVENT_DISCONNECTED,
+            MQTT_EVENT_DATA })
+        esp_mqtt_client_register_event(mqtt_client_, e, event_handler, this);
+
 
     // Start the MQTT client
     esp_mqtt_client_start(mqtt_client_);
-
-    ESP_LOGI("TAG", "MQTT client initialized and started");
+    ESP_LOGI(TAG, "started");
 }
 
 // Static event handler required by the ESP-IDF
@@ -40,6 +43,7 @@ void MQTTClient::handle(esp_event_base_t base, int32_t id, esp_mqtt_event_handle
 
         // XXX: Publishing a test message should be an optional feature,
         // which could be enabled by the user at compile time
+        ESP_LOGI(TAG, "Sending a test message...");
         publish("/topic/test", "Hello from ESP32!", 1, 0);
         for (const auto& f: on_connect_cb) f(data);
     }
@@ -51,9 +55,6 @@ void MQTTClient::handle(esp_event_base_t base, int32_t id, esp_mqtt_event_handle
     else if (id == MQTT_EVENT_DATA) {
         ESP_LOGI(TAG, "Data received");
         for (const auto& f: on_data_received_cb) f(data);
-    }
-    else {
-        ESP_LOGW(TAG, "Unhandled event: id=%d", data->event_id );
     }
 }
 
