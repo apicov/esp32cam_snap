@@ -121,21 +121,16 @@ void camera_task(void *p)
 
 void start_mqtt_client(){
     mqtt = new MQTTClient{MQTT_URI};
-    mqtt->register_event_callback(MQTT_EVENT_CONNECTED, [](auto event_data) {
-        ESP_LOGI(__func__, "MQTT_connected");
-        mqtt->subscribe("/camera/cmd", 0);
-    });
 
-    // Triggered when the client receives data from a subscribed topic
-    mqtt->register_event_callback(MQTT_EVENT_DATA, [](auto event_data) {
+    mqtt->on_connect([](auto _) { mqtt->subscribe("/camera/cmd", 0); });
+    mqtt->on_data_received([](auto data) {
         uint8_t cmd = 1; //dummy data to send to the queue
-        ESP_LOGI(__func__, "MQTT_EVENT_DATA");
-        ESP_LOGI(__func__, "Received topic: %.*s", event_data->topic_len, event_data->topic);
-        ESP_LOGI(__func__, "Received data: %.*s", event_data->data_len, event_data->data);
+        ESP_LOGI(__func__, "Received topic: %.*s", data->topic_len, data->topic);
+        ESP_LOGI(__func__, "Received data: %.*s", data->data_len, data->data);
 
         // Check if the received message is a snap command
-        if (strncmp(event_data->topic, "/camera/cmd", event_data->topic_len) == 0) {
-            if (strncmp(event_data->data, "snap", event_data->data_len) == 0) {
+        if (strncmp(data->topic, "/camera/cmd", data->topic_len) == 0) {
+            if (strncmp(data->data, "snap", data->data_len) == 0) {
                 ESP_LOGI(__func__, "snap command received");
                 xQueueSend(camera_evt_queue, &cmd, 0);
             }

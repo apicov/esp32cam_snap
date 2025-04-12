@@ -36,7 +36,6 @@ void MQTTClient::event_handler(void* arg, esp_event_base_t base, int32_t id, voi
 
 // Instance-level event handler
 void MQTTClient::handle(esp_event_base_t base, int32_t id, esp_mqtt_event_handle_t data) {
-
     //check if event is connected or disconnected to update is_connected_ variable
     if(id == MQTT_EVENT_CONNECTED) {
         is_connected_.store(true);
@@ -45,29 +44,35 @@ void MQTTClient::handle(esp_event_base_t base, int32_t id, esp_mqtt_event_handle
         // XXX: Publishing a test message should be an optional feature,
         // which could be enabled by the user at compile time
         publish("/topic/test", "Hello from ESP32!", 1, 0);
+        for (const auto& f: on_connect_cb) f(data);
     }
     else if (id == MQTT_EVENT_DISCONNECTED) {
         is_connected_.store(false);
+        ESP_LOGI(TAG, "The client is disconnected");
+        for (const auto& f: on_disconnect_cb) f(data);
     }
     else if (id == MQTT_EVENT_DATA) {
         ESP_LOGI(TAG, "Data received");
         ESP_LOGI(TAG, "Received topic: %.*s", data->topic_len, data->topic);
         ESP_LOGI(TAG, "Received data: %.*s", data->data_len, data->data);
+        for (const auto& f: on_data_received_cb) f(data);
     }
-
-    auto key = data->event_id;
-    auto it = event_callbacks_.find(key);
-
-    if (it != event_callbacks_.end()) {
-        // Call the registered callback for this event
-        it->second(data);
-    } else {
+    else {
         ESP_LOGW(TAG, "Unhandled event: id=%d", data->event_id );
     }
 }
 
-void MQTTClient::register_event_callback(int32_t event_id, MQTTEventCallback callback) {
-    event_callbacks_[event_id] = std::move(callback);
+MQTTClient& MQTTClient::on_connect(MQTTEventCallback f) {
+    on_connect_cb.push_back(f);
+    return *this;
+}
+MQTTClient& MQTTClient::on_disconnect(MQTTEventCallback f) {
+    on_disconnect_cb.push_back(f);
+    return *this;
+}
+MQTTClient& MQTTClient::on_data_received(MQTTEventCallback f){
+    on_data_received_cb.push_back(f);
+    return *this;
 }
 
 bool MQTTClient::is_connected() const {

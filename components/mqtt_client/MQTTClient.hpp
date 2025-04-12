@@ -90,10 +90,40 @@ public:
     // sane default value
     esp_err_t subscribe(const char* topic, int qos);
 
+
+    /**
+     * @brief Enqueue an action to execute on a connect event
+     *
+     * @param MQTTEventCallback
+     *
+     * @return a reference to the same instance
+     */
+    MQTTClient& on_connect(MQTTEventCallback);
+
+    /**
+     * @brief Enqueue an action to execute on a disconnect event
+     *
+     * @param MQTTEventCallback
+     *
+     * @return a reference to the same instance
+     */
+    MQTTClient& on_disconnect(MQTTEventCallback);
+
+    /**
+     * @brief Enqueue an action to execute when data is received
+     *
+     * @param MQTTEventCallback
+     *
+     * @return a reference to the same instance
+     */
+    MQTTClient& on_data_received(MQTTEventCallback);
+
 private:
     std::atomic<bool> is_connected_; ///< Atomic flag indicating connection status.
     esp_mqtt_client_handle_t mqtt_client_ = nullptr; ///< Global MQTT client handle.
-    std::unordered_map<int32_t, MQTTEventCallback> event_callbacks_; ///< Map of registered event callbacks.
+    std::vector<MQTTEventCallback> on_connect_cb;
+    std::vector<MQTTEventCallback> on_disconnect_cb;
+    std::vector<MQTTEventCallback> on_data_received_cb;
     const char* mqtt_broker_uri_; ///< URI of the MQTT broker.
     static constexpr const char* TAG = "MQTTCLIENT"; ///< Log tag for MQTT operations.
 
