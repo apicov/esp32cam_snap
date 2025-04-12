@@ -41,15 +41,10 @@ void MQTTClient::handle(esp_event_base_t base, int32_t id, esp_mqtt_event_handle
     if(id == MQTT_EVENT_CONNECTED) {
         is_connected_.store(true);
         ESP_LOGI(TAG, "The client is connected");
-        // publish a test message to a "test" topic
-        //
-        // XXX: Probably this should be an optional feature, and it can
-        // be guraded by a "define" macro so the user can enable it at
-        // compile time
-        int msg_id = esp_mqtt_client_publish(
-            mqtt_client_, "/topic/test", "Hello from ESP32!", 0, 1, 0);
-        if (msg_id < 0)
-            ESP_LOGE(TAG, "Failed to publish in '/topic/test', msg_id=%d", msg_id);
+
+        // XXX: Publishing a test message should be an optional feature,
+        // which could be enabled by the user at compile time
+        publish("/topic/test", "Hello from ESP32!", 1, 0);
     }
     else if (id == MQTT_EVENT_DISCONNECTED) {
         is_connected_.store(false);
