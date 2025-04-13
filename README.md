@@ -1,10 +1,10 @@
 # About
 
-Use the an [esp32-camera](https://components.espressif.com/components/espressif/esp32-camera/versions/2.0.15) supported device to "snap" pictures and publish them via [MQTT](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/mqtt.html).
+Use an [esp32-camera](https://components.espressif.com/components/espressif/esp32-camera/versions/2.0.15) supported device to "snap" pictures and publish them via [MQTT](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/protocols/mqtt.html).
 
 The ESP32-CAM enabled device will subscribe to a configured MQTT topic and wait for the "snap" command, this command will trigger an action to capture and send an image over MQTT to a configured topic (might be a different topic to the one used for the "snap" command).
 
-A concrete example might be to use the ESP32-CAM device to communicate with a [Telegram bot](https://github.com/apicov/telegram_bot_esp32_cam) in order to pass "snap" commands and share images using [Telegram](https://telegram.org/).
+A concrete example can be to use an ESP32-CAM device to communicate with a [Telegram bot](https://github.com/apicov/telegram_bot_esp32_cam) created by the user, then take snapshots and share them using [Telegram](https://telegram.org/).
 
 # Build the project
 
