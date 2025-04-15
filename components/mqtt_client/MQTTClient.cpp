@@ -96,3 +96,7 @@ void MQTTClient::publish(const char* topic, const char* data, int qos, int retai
 esp_err_t MQTTClient::subscribe(const char* topic, int qos){
     return esp_mqtt_client_subscribe(mqtt_client_, topic, qos);
 }
+
+esp_err_t MQTTClient::reconnect() {
+    return esp_mqtt_client_reconnect(mqtt_client_);
+}

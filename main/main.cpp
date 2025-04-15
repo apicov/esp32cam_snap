@@ -31,7 +31,7 @@ void start_mqtt_client();
 /* globals */
 const char *TAG = "main";
 MQTTClient *mqtt = nullptr;
-QueueHandle_t camera_evt_queue = NULL;  // FreeRTOS queue for camera trigger events
+QueueHandle_t camera_evt_queue = nullptr;  // FreeRTOS queue for camera trigger events
 
 extern "C" void app_main()
 {
@@ -112,6 +112,12 @@ void camera_task(void *p)
 }
 
 void start_mqtt_client(){
+    // reconnect if the client was created already
+    if (mqtt) {
+        mqtt->reconnect();
+        return;
+    }
+
     mqtt = new MQTTClient{MQTT_URI};
     mqtt->on_connect([](auto _) { mqtt->subscribe(MQTT_CMD_TOPIC); });
     mqtt->on_data_received([](auto data) {

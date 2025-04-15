@@ -71,6 +71,14 @@ public:
     // sane default value
     esp_err_t subscribe(const char* topic, int qos=0);
 
+
+    /**
+     * @brief Force reconnection of the client
+     *
+     */
+    esp_err_t reconnect(void);
+
+
     /**
      * @brief Enqueue an action to execute on a connect event
      *
