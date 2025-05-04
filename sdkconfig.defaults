@@ -407,6 +407,16 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
+# esp32cam_snap
+#
+CONFIG_SNAP_WIFI_SSID=""
+CONFIG_SNAP_WIFI_PASSWORD=""
+CONFIG_SNAP_MQTT_URI="mqtt://127.0.0.1:1883"
+CONFIG_SNAP_MQTT_CMD_TOPIC="/camera/cmd"
+CONFIG_SNAP_CMD_IMG_TOPIC="/camera/img"
+# end of esp32cam_snap
+
+#
 # Compiler options
 #
 CONFIG_COMPILER_OPTIMIZATION_DEBUG=y

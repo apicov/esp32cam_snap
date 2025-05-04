@@ -1,0 +1,21 @@
+menu "esp32cam_snap"
+
+config SNAP_WIFI_SSID
+       string "SSID of the WIFI"
+
+config SNAP_WIFI_PASSWORD
+       string "Password of the WIFI"
+
+config SNAP_MQTT_URI
+       string "URI of the MQTT broker"
+       default "mqtt://127.0.0.1:1883"
+
+config SNAP_MQTT_CMD_TOPIC
+       string "MQTT topic to send commands"
+       default "/camera/cmd"
+
+config SNAP_CMD_IMG_TOPIC
+       string "MQTT topic to receive images"
+       default "/camera/img"
+
+endmenu
