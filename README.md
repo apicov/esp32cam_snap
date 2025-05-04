@@ -8,9 +8,9 @@ A concrete example may be to use an ESP32-CAM device to communicate with a user 
 
 # Build the project
 
-The project needs to be configured before being able to build it for the first time; to do this, run the configuration script from the project's root:
+The project needs to be configured before building it for the first time. Run the "menuconfig" of the project and configure all the items listed under the `esp32cam_snap` menu
 ```sh
-python configure_app.py
+idf.py menuconfig
 ```
 
 Once the project is configured, it should be possible run build, flash and monitor it:
