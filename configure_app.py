@@ -70,7 +70,7 @@ else:
     import builtins
     builtins.input = lambda _ : answers.pop(0)
 
-    def expect(port=1234):
+    def expect(port):
         return f'''
 #ifndef APP_CONFIGURATION_H
 #define APP_CONFIGURATION_H
@@ -85,15 +85,15 @@ else:
 '''
 
     answers = ['my_ssid', 'my_passwd', 'mqtt://127.0.0.1:1234', '', '']
-    assert header_string() == expect()
+    assert header_string() == expect(1234)
 
     answers = ['my_ssid', 'my_passwd', '127.0.0.1', '1234', '', '']
-    assert header_string() == expect()
+    assert header_string() == expect(1234)
 
     answers = ['my_ssid', 'my_passwd', '127.0.0.1', '', '', '']
     assert header_string() == expect(1883)
 
     answers = ['my_ssid', 'my_passwd', '127.0.0.1:1234', '', '']
-    assert header_string() == expect()
+    assert header_string() == expect(1234)
 
     print("ok")
