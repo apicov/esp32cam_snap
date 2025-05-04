@@ -14,7 +14,7 @@ config SNAP_MQTT_CMD_TOPIC
        string "MQTT topic to send commands"
        default "/camera/cmd"
 
-config SNAP_CMD_IMG_TOPIC
+config SNAP_MQTT_CMD_IMG_TOPIC
        string "MQTT topic to receive images"
        default "/camera/img"
 
