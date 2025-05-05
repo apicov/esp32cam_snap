@@ -2,30 +2,30 @@ menu "esp32cam_snap"
 
 config SNAP_WIFI_SSID
        string "WIFI SSID"
-          help
-              The SSID that the ESP32-CAM will connect to.
+       help
+           The SSID that the ESP32-CAM will connect to.
 
 config SNAP_WIFI_PASSWORD
        string "WIFI Password"
-          help
-              The password of the SSID that the ESP32-CAM will connecto to.
+       help
+           The password of the SSID that the ESP32-CAM will connecto to.
 
 config SNAP_MQTT_URI
        string "MQTT URI"
        default "mqtt://127.0.0.1:1883"
-           help
-               The URI of the MQTT broker.
+       help
+           The URI of the MQTT broker.
 
 config SNAP_MQTT_CMD_TOPIC
        string "MQTT command topic"
        default "/camera/cmd"
-           help
-               The MQTT topic to use for passing "command" messages.
+       help
+           The MQTT topic to use for passing "command" messages.
 
 config SNAP_MQTT_IMG_TOPIC
        string "MQTT image topic"
        default "/camera/img"
-           help
-               The MQTT topic to use for passing the snapshots.
+       help
+           The MQTT topic to use for passing the snapshots.
 
 endmenu
