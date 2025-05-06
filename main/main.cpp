@@ -74,10 +74,9 @@ void camera_task(void *p)
     constexpr size_t image_size{160 * 120 * 3};
     constexpr size_t b64_size{(4 * ((image_size + 2) / 3)) + 1};
 
-    // TODO: does this allocation have to be in external RAM?
-    char* b64_buffer = (char*)heap_caps_malloc(b64_size, MALLOC_CAP_SPIRAM);
+    char* b64_buffer = (char*) malloc(b64_size);
     if (b64_buffer == NULL) {
-        ESP_LOGE(TAG, "Failed to allocate memory in PSRAM");
+        ESP_LOGE(TAG, "Failed to allocate memory for encoding the image");
         // TODO: die here...
         return;
     }
