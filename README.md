@@ -4,7 +4,7 @@ Use an [esp32-camera](https://components.espressif.com/components/espressif/esp3
 
 The ESP32-CAM enabled device will subscribe to a configured MQTT topic and wait for the "snap" command, this command will trigger an action to capture and send an image over MQTT to a configured topic (might be a different topic to the one used for the "snap" command).
 
-A concrete example may be to use an ESP32-CAM device to communicate with a user created [Telegram bot](https://github.com/apicov/telegram_bot_esp32_cam), then take snapshots and share them from a [Telegram](https://telegram.org/) account.
+A concrete example may be to use an ESP32-CAM device to communicate with a user created [Telegram bot](https://github.com/apicov/esp32cam_snapbot), then take snapshots and share them from a [Telegram](https://telegram.org/) account.
 
 # Build the project
 
