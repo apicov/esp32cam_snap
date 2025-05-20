@@ -60,7 +60,7 @@ extern "C" void app_main()
     // tasks
     xTaskCreate(camera_task, "camera", 4096, NULL, 5, NULL);
 
-    ESP_LOGI(TAG, "ESP32-cam_AI is running");
+    ESP_LOGI(TAG, "esp32cam_snap is running");
 } // end of app_main
 
 

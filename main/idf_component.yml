@@ -1,8 +1,8 @@
-description: esp32-cam_AI
-url: https://github.com/apicov/esp32-cam_AI
-repository: https://github.com/apicov/esp32-cam_AI.git
-issues: https://github.com/apicov/esp32-cam_AI/issues
-documentation: https://github.com/apicov/esp32-cam_AI/blob/main/README.md
+description: esp32cam_snap
+url: https://github.com/apicov/esp32cam_snap
+repository: https://github.com/apicov/esp32cam_snap.git
+issues: https://github.com/apicov/esp32cam_snap/issues
+documentation: https://github.com/apicov/esp32cam_snap/blob/main/README.md
 
 dependencies:
   idf: "~5.4"
