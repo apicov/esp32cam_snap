@@ -83,59 +83,60 @@ void camera_task(void *p)
 
                 ESP_LOGI(TAG, "Captured JPEG image: %zu bytes", jpeg_len);
 
-                // Allocate buffers in PSRAM for image processing
-                constexpr size_t decoded_size = 160 * 120 * 3;  // RGB888: 57,600 bytes
-                constexpr size_t resized_size = 96 * 96 * 3;    // RGB888: 27,648 bytes
-                constexpr size_t b64_size = (4 * ((resized_size + 2) / 3)) + 1;  // ~36,865 bytes
+                // Base64 encode the original JPEG for MQTT transmission
+                size_t jpeg_b64_size = (4 * ((jpeg_len + 2) / 3)) + 1;
+                char* jpeg_b64_buffer = (char*)heap_caps_malloc(jpeg_b64_size, MALLOC_CAP_SPIRAM);
 
-                uint8_t* decoded_buf = (uint8_t*)heap_caps_malloc(decoded_size, MALLOC_CAP_SPIRAM);
-                uint8_t* resized_buf = (uint8_t*)heap_caps_malloc(resized_size, MALLOC_CAP_SPIRAM);
-                char* b64_buffer = (char*)heap_caps_malloc(b64_size, MALLOC_CAP_SPIRAM);
-
-                if (!decoded_buf || !resized_buf || !b64_buffer) {
-                    ESP_LOGE(TAG, "Failed to allocate processing buffers in PSRAM");
-                    heap_caps_free(decoded_buf);
-                    heap_caps_free(resized_buf);
-                    heap_caps_free(b64_buffer);
+                if (!jpeg_b64_buffer) {
+                    ESP_LOGE(TAG, "Failed to allocate base64 buffer for JPEG");
                     return;
                 }
 
-                ESP_LOGI(TAG, "Allocated buffers: decoded=%p, resized=%p, b64=%p (all in PSRAM)",
-                         decoded_buf, resized_buf, b64_buffer);
+                size_t olen;
+                auto ret = mbedtls_base64_encode(
+                    (unsigned char *)jpeg_b64_buffer, jpeg_b64_size, &olen, jpeg_data, jpeg_len);
 
-                // Convert JPEG to RGB888 (160x120)
+                if (ret == 0) {
+                    ESP_LOGI(TAG, "Publishing %zu bytes (base64) to MQTT - original JPEG", olen);
+                    mqtt->publish(CONF(IMAGE_TOPIC), jpeg_b64_buffer, 0, 0);
+                    ESP_LOGI(TAG, "Original JPEG published successfully");
+                }
+                else {
+                    ESP_LOGE(TAG, "Base64 encoding failed");
+                }
+
+                heap_caps_free(jpeg_b64_buffer);
+
+                // Allocate buffers for local processing (96x96 resize)
+                constexpr size_t decoded_size = 160 * 120 * 3;  // RGB888: 57,600 bytes
+                constexpr size_t resized_size = 96 * 96 * 3;    // RGB888: 27,648 bytes
+
+                uint8_t* decoded_buf = (uint8_t*)heap_caps_malloc(decoded_size, MALLOC_CAP_SPIRAM);
+                uint8_t* resized_buf = (uint8_t*)heap_caps_malloc(resized_size, MALLOC_CAP_SPIRAM);
+
+                if (!decoded_buf || !resized_buf) {
+                    ESP_LOGE(TAG, "Failed to allocate processing buffers in PSRAM");
+                    heap_caps_free(decoded_buf);
+                    heap_caps_free(resized_buf);
+                    return;
+                }
+
+                // Convert JPEG to RGB888 (160x120) for local processing
                 if (!fmt2rgb888(jpeg_data, jpeg_len, PIXFORMAT_JPEG, decoded_buf)) {
                     ESP_LOGE(TAG, "JPEG to RGB888 conversion failed");
                     heap_caps_free(decoded_buf);
                     heap_caps_free(resized_buf);
-                    heap_caps_free(b64_buffer);
                     return;
                 }
                 ESP_LOGI(TAG, "JPEG decoded to RGB888");
 
-                // Resize from 160x120 to 96x96
+                // Resize from 160x120 to 96x96 for local processing
                 resizeColorImage(decoded_buf, 160, 120, resized_buf, 96, 96);
-                ESP_LOGI(TAG, "Image resized to 96x96");
-
-                // Base64 encode the resized image
-                size_t olen;
-                auto ret = mbedtls_base64_encode(
-                    (unsigned char *)b64_buffer, b64_size, &olen, resized_buf, resized_size);
-
-                if (ret == 0) {
-                    ESP_LOGI(TAG, "Publishing %zu bytes (base64) to MQTT", olen);
-                    mqtt->publish(CONF(IMAGE_TOPIC), b64_buffer, 2, 0);
-                    ESP_LOGI(TAG, "Image published successfully");
-                }
-                else {
-                    ESP_LOGE(TAG, "Base64 encoding failed, buffer too small (%zu), needs %zu",
-                             b64_size, olen);
-                }
+                ESP_LOGI(TAG, "Image resized to 96x96 for local processing");
 
                 // Free buffers
                 heap_caps_free(decoded_buf);
                 heap_caps_free(resized_buf);
-                heap_caps_free(b64_buffer);
             });
         }
         else
