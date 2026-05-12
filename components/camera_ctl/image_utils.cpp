@@ -9,20 +9,35 @@ void resizeColorImage(uint8_t *src, int srcWidth, int srcHeight,
             int srcX = x * srcWidth / dstWidth;
             int srcY = y * srcHeight / dstHeight;
 
-            // Calculate source index in 24-bit array (RGB888)
-            int srcIndex = (srcY * srcWidth + srcX) * 3; // RGB888 = 3 bytes per pixel
+            // Calculate source and destination indices
+            int srcIndex = (srcY * srcWidth + srcX) * 3;
+            int dstIndex = (y * dstWidth + x) * 3;
 
-            // Extract RGB components
-            // swap r and b channels (because of bug in fmt2rgb888 function)
-            uint8_t b = src[srcIndex];
-            uint8_t g = src[srcIndex + 1];
-            uint8_t r = src[srcIndex + 2];
+            // Copy as-is (no BGR/RGB swap)
+            dst[dstIndex] = src[srcIndex];
+            dst[dstIndex + 1] = src[srcIndex + 1];
+            dst[dstIndex + 2] = src[srcIndex + 2];
+        }
+    }
+}
 
-            // Write to the destination array
-            int dstIndex = (y * dstWidth + x) * 3; // RGB888 = 3 bytes per pixel
-            dst[dstIndex] = r;
-            dst[dstIndex + 1] = g;
-            dst[dstIndex + 2] = b;
+
+void resizeColorImageBGRtoRGB(uint8_t *src, int srcWidth, int srcHeight,
+                              uint8_t *dst, int dstWidth, int dstHeight) {
+    for (int y = 0; y < dstHeight; y++) {
+        for (int x = 0; x < dstWidth; x++) {
+            // Map destination coordinates to source coordinates
+            int srcX = x * srcWidth / dstWidth;
+            int srcY = y * srcHeight / dstHeight;
+
+            // Calculate source and destination pixel positions (3 bytes per pixel)
+            int srcPos = (srcY * srcWidth + srcX) * 3;
+            int dstPos = (y * dstWidth + x) * 3;
+
+            // Resize and swap BGR to RGB in one pass
+            dst[dstPos] = src[srcPos + 2];     // R = src B
+            dst[dstPos + 1] = src[srcPos + 1]; // G = src G
+            dst[dstPos + 2] = src[srcPos];     // B = src R
         }
     }
 }

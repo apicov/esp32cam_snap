@@ -60,10 +60,10 @@ CameraCtl::CameraCtl()
       .pixel_format = PIXFORMAT_JPEG,
       .frame_size = FRAMESIZE_QQVGA,
 
-      .jpeg_quality = 12,
+      .jpeg_quality = 20,
       .fb_count = 1,
-      .fb_location = CAMERA_FB_IN_PSRAM,
-      .grab_mode = CAMERA_GRAB_WHEN_EMPTY,
+      .fb_location = CAMERA_FB_IN_DRAM,  // Small JPEG in internal RAM (~4KB)
+      .grab_mode = CAMERA_GRAB_LATEST,   // Only grab when requested (saves power)
       .sccb_i2c_port = I2C_NUM_0
     };
 
@@ -72,7 +72,17 @@ CameraCtl::CameraCtl()
      */
     ESP_ERROR_CHECK(esp_camera_init(&config));
     gpio_set_direction(CAM_FLASH_LAMP, GPIO_MODE_OUTPUT);
-    ESP_LOGD(TAG, "Camera initialized");
+    ESP_LOGI(TAG, "Camera initialized, warming up...");
+
+    // Discard first few frames to let camera stabilize
+    for(int i = 0; i < 3; i++) {
+        camera_fb_t* fb = esp_camera_fb_get();
+        if(fb) {
+            esp_camera_fb_return(fb);
+        }
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+    ESP_LOGI(TAG, "Camera ready");
 }
 
 
@@ -109,6 +119,7 @@ esp_err_t CameraCtl::camera_xclk_init(uint32_t freq_hz) {
         .hpoint = 0,
         .sleep_mode = LEDC_SLEEP_MODE_NO_ALIVE_NO_PD, // TODO: default
         .flags = { .output_invert = 1 },              // TODO: default
+        .deconfigure = 0,
     };
     ESP_RETURN_ON_ERROR(ledc_channel_config(&ledc_channel), TAG, "ledc_channel");
 
@@ -117,8 +128,16 @@ esp_err_t CameraCtl::camera_xclk_init(uint32_t freq_hz) {
 
 /* CameraCtl::Picture */
 /* ================== */
-CameraCtl::Picture::Picture() : fb{esp_camera_fb_get()}
+CameraCtl::Picture::Picture()
 {
+    // With fb_count=1, discard old frame and grab fresh one
+    camera_fb_t* old_fb = esp_camera_fb_get();
+    if (old_fb) {
+        esp_camera_fb_return(old_fb);
+    }
+
+    // Grab fresh frame
+    fb = esp_camera_fb_get();
     ESP_LOGI(TAG, "Snapshot taken");
 }
 

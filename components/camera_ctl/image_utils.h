@@ -4,7 +4,10 @@
 #include <esp_log.h>
 
 
-void resizeColorImage(uint8_t *src, int srcWidth, int srcHeight, 
+void resizeColorImage(uint8_t *src, int srcWidth, int srcHeight,
                       uint8_t *dst, int dstWidth, int dstHeight);
+
+void resizeColorImageBGRtoRGB(uint8_t *src, int srcWidth, int srcHeight,
+                              uint8_t *dst, int dstWidth, int dstHeight);
 
 void saveAsPPM(const char *filename, uint8_t *image, int width, int height);
