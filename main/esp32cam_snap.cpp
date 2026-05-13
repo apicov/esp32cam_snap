@@ -179,35 +179,35 @@ void camera_task(void *p)
                 // The 160x120 JPEG is decoded to raw RGB888 for local processing
                 // (e.g. running an ML model). Then it is downscaled to 96x96,
                 // a common input resolution for tinyML image classifiers.
-                constexpr size_t decoded_size = 160 * 120 * 3;  // RGB888: 57,600 bytes
-                constexpr size_t resized_size = 96 * 96 * 3;    // RGB888: 27,648 bytes
+                // constexpr size_t decoded_size = 160 * 120 * 3;  // RGB888: 57,600 bytes
+                // constexpr size_t resized_size = 96 * 96 * 3;    // RGB888: 27,648 bytes
 
-                uint8_t* decoded_buf = (uint8_t*)heap_caps_malloc(decoded_size, MALLOC_CAP_SPIRAM);
-                uint8_t* resized_buf = (uint8_t*)heap_caps_malloc(resized_size, MALLOC_CAP_SPIRAM);
+                // uint8_t* decoded_buf = (uint8_t*)heap_caps_malloc(decoded_size, MALLOC_CAP_SPIRAM);
+                // uint8_t* resized_buf = (uint8_t*)heap_caps_malloc(resized_size, MALLOC_CAP_SPIRAM);
 
-                if (!decoded_buf || !resized_buf) {
-                    ESP_LOGE(TAG, "Failed to allocate processing buffers in PSRAM");
-                    heap_caps_free(decoded_buf);
-                    heap_caps_free(resized_buf);
-                    return;
-                }
+                // if (!decoded_buf || !resized_buf) {
+                //     ESP_LOGE(TAG, "Failed to allocate processing buffers in PSRAM");
+                //     heap_caps_free(decoded_buf);
+                //     heap_caps_free(resized_buf);
+                //     return;
+                // }
 
                 // fmt2rgb888 decodes the JPEG into a flat RGB888 byte array
                 // (R, G, B per pixel, row-major). PIXFORMAT_JPEG tells the
                 // decoder what format the source data is in.
-                if (!fmt2rgb888(jpeg_data, jpeg_len, PIXFORMAT_JPEG, decoded_buf)) {
-                    ESP_LOGE(TAG, "JPEG to RGB888 conversion failed");
-                    heap_caps_free(decoded_buf);
-                    heap_caps_free(resized_buf);
-                    return;
-                }
-                ESP_LOGI(TAG, "JPEG decoded to RGB888");
+                // if (!fmt2rgb888(jpeg_data, jpeg_len, PIXFORMAT_JPEG, decoded_buf)) {
+                //     ESP_LOGE(TAG, "JPEG to RGB888 conversion failed");
+                //     heap_caps_free(decoded_buf);
+                //     heap_caps_free(resized_buf);
+                //     return;
+                // }
+                // ESP_LOGI(TAG, "JPEG decoded to RGB888");
 
-                resizeColorImage(decoded_buf, 160, 120, resized_buf, 96, 96);
-                ESP_LOGI(TAG, "Image resized to 96x96 for local processing");
+                // resizeColorImage(decoded_buf, 160, 120, resized_buf, 96, 96);
+                // ESP_LOGI(TAG, "Image resized to 96x96 for local processing");
 
-                heap_caps_free(decoded_buf);
-                heap_caps_free(resized_buf);
+                // heap_caps_free(decoded_buf);
+                // heap_caps_free(resized_buf);
             });
         }
         else
